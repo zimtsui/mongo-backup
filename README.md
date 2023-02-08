@@ -8,9 +8,9 @@
 
 Environment variables:
 
-- `HOSTNAME`
-- `USER_ID`
-- `PASSWORD`
+- `S3_HOSTNAME`
+- `S3_USERNAME`
+- `S3_PASSWORD`
 
 ```
 mongo-backup capture <MONGO_URI> <S3_BUCKET> <S3_OBJECT>
