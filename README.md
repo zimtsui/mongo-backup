@@ -13,6 +13,6 @@ Environment variables:
 - `PASSWORD`
 
 ```
-backup capture <MONGO_URI> <S3_BUCKET> <S3_OBJECT>
-backup restore <S3_BUCKET> <S3_OBJECT> <MONGO_URI>
+mongo-backup capture <MONGO_URI> <S3_BUCKET> <S3_OBJECT>
+mongo-backup restore <S3_BUCKET> <S3_OBJECT> <MONGO_URI>
 ```
