@@ -27,6 +27,7 @@ case $SUBCMD in
 		mc cat "$S3_GATEWAY/$S3_BUCKET/$S3_OBJECT" | mongorestore --archive --gzip --uri=$MONGO_URI
     ;;
 	*)
+		echo "Invalid subcommand."
 		exit 1
 	;;
 esac
