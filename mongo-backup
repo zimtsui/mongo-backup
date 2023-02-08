@@ -9,6 +9,9 @@ set -o errexit
 ## 为什么不需要转发信号？
 # 进程组的语义就是一个不可分割的 job，因此应该在发送信号时直接发给整个进程组，而不是只发给组长然后让组长转发。
 
+APPNAME=mongo-backup
+VERSION=0.0.1
+
 S3_GATEWAY=backup
 mc alias set $S3_GATEWAY $S3_HOSTNAME $S3_USERNAME $S3_PASSWORD
 
@@ -26,6 +29,9 @@ case $SUBCMD in
 		MONGO_URI=$4
 		mc cat "$S3_GATEWAY/$S3_BUCKET/$S3_OBJECT" | mongorestore --archive --gzip --uri=$MONGO_URI
     ;;
+	--version)
+		echo "$APPNAME $VERSION"
+	;;
 	*)
 		echo "Invalid subcommand."
 		exit 1
