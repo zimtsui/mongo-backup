@@ -1,23 +1,30 @@
-#!/bin/bash
+#!/usr/bin/env bash
+## 为什么不直接 `/usr/bash`？
+# 因为 bash 不在 POSIX 标准中，不能默认用户有 bash，只能把 bash 作为显式依赖。
 
 set -o pipefail # Not supported by POSIX shell
 set -o errexit
-trap "trap - HUP && kill -s SIGHUP -$$" INT HUP TERM EXIT
 
-GATEWAY=backup
-mc alias set $GATEWAY $HOSTNAME $USER_ID $PASSWORD
+# trap "trap - HUP && kill -s SIGHUP -$$" INT HUP TERM EXIT
+## 为什么不需要转发信号？
+# 进程组的语义就是一个不可分割的 job，因此应该在发送信号时直接发给整个进程组，而不是只发给组长然后让组长转发。
+
+S3_GATEWAY=backup
+mc alias set $S3_GATEWAY $S3_HOSTNAME $S3_USERNAME $S3_PASSWORD
 
 SUBCMD=$1
 case $SUBCMD in
 	capture)
-		DATABASE_URI=$2
-		BACKUP_PATH=$3
-		mongodump --archive --gzip --uri=$DATABASE_URI | mc pipe "$GATEWAY/$BACKUP_PATH"
+		MONGO_URI=$2
+		S3_BUCKET=$3
+		S3_OBJECT=$4
+		mongodump --archive --gzip --uri=$MONGO_URI | mc pipe "$S3_GATEWAY/$S3_BUCKET/$S3_OBJECT"
 	;;
 	restore)
-		BACKUP_PATH=$2
-		DATABASE_URI=$3
-		mc cat "$GATEWAY/$BACKUP_PATH" | mongorestore --archive --gzip --uri=$DATABASE_URI
+		S3_BUCKET=$2
+		S3_OBJECT=$3
+		MONGO_URI=$4
+		mc cat "$S3_GATEWAY/$S3_BUCKET/$S3_OBJECT" | mongorestore --archive --gzip --uri=$MONGO_URI
     ;;
 	*)
 		exit 1

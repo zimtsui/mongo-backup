@@ -1,5 +1,6 @@
 # Prerequisites
 
+- `bash`
 - MinIO Client `mc`
 - MongoDB Database Tools `mongodump` and `mongorestore`
 
@@ -12,6 +13,6 @@ Environment variables:
 - `PASSWORD`
 
 ```
-backup capture <DATABASE_URI> <BUCKET/FILE_PATH>
-backup restore <BUCKET/FILE_PATH> <DATABASE_URI>
+backup capture <MONGO_URI> <S3_BUCKET> <S3_OBJECT>
+backup restore <S3_BUCKET> <S3_OBJECT> <MONGO_URI>
 ```
