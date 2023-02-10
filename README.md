@@ -4,13 +4,20 @@
 - MinIO Client `mc`
 - MongoDB Database Tools `mongodump` and `mongorestore`
 
+# 安装卸载
+
+```shell
+./configure && sudo make install
+mongo-backup --version
+sudo make uninstall
+```
+
 # Usage
 
 ## Required Environment variables
 
-- `S3_HOSTNAME`
-- `S3_USERNAME`
-- `S3_PASSWORD`
+- `MC_ALIAS`
+- `MONGO_HOST`
 
 ## 备份
 

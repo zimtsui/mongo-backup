@@ -12,22 +12,21 @@ set -o errexit
 APPNAME=mongo-backup
 VERSION=0.0.1
 
-S3_GATEWAY=backup
-mc alias set $S3_GATEWAY $S3_HOSTNAME $S3_USERNAME $S3_PASSWORD
+# mc alias set $MC_ALIAS $S3_HOSTNAME $S3_USERNAME $S3_PASSWORD
 
 SUBCMD=$1
 case $SUBCMD in
 	capture)
-		MONGO_URI=$2
+		MONGO_DB=$2
 		S3_BUCKET=$3
 		S3_OBJECT=$4
-		mongodump --archive --gzip --uri=$MONGO_URI | mc pipe "$S3_GATEWAY/$S3_BUCKET/$S3_OBJECT"
+		mongodump --archive --gzip --host=$MONGO_HOST --db=$MONGO_DB | mc pipe "$MC_ALIAS/$S3_BUCKET/$S3_OBJECT"
 	;;
 	restore)
 		S3_BUCKET=$2
 		S3_OBJECT=$3
-		MONGO_URI=$4
-		mc cat "$S3_GATEWAY/$S3_BUCKET/$S3_OBJECT" | mongorestore --archive --gzip --uri=$MONGO_URI
+		MONGO_DB=$4
+		mc cat "$MC_ALIAS/$S3_BUCKET/$S3_OBJECT" | mongorestore --archive --gzip --host=$MONGO_HOST --db=$MONGO_DB
     ;;
 	--version)
 		echo "$APPNAME $VERSION"
