@@ -70,7 +70,7 @@ namespace Document {
 	}
 }
 
-type Document<Req, ResSucc, ResFail> =
+type Document<Req = unknown, ResSucc = unknown, ResFail = unknown> =
 	Document.Orphan<Req> |
 	Document.Adopted<Req> |
 	Document.Cancelled<Req> |
