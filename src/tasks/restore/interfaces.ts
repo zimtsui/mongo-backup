@@ -2,7 +2,7 @@ import {
 	JsonRpcReq,
 	JsonRpcResSucc,
 	JsonRpcResFail,
-} from "../../interfaces";
+} from "../../json-rpc";
 
 export interface RestoreReq extends JsonRpcReq<string, 'restore'> {
 	readonly params: {

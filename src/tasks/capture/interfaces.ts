@@ -1,10 +1,6 @@
-import {
-	JsonRpcReq,
-	JsonRpcResSucc,
-	JsonRpcResFail,
-} from '../../interfaces';
+import * as JsonRpc from '../../json-rpc';
 
-export interface CaptureReq extends JsonRpcReq<string, 'capture'> {
+export interface Req extends JsonRpc.Req<string, 'capture'> {
 	readonly params: {
 		readonly db: string;
 		readonly bucket: string;
@@ -12,6 +8,5 @@ export interface CaptureReq extends JsonRpcReq<string, 'capture'> {
 	};
 };
 
-export type CaptureRes = JsonRpcResSucc<string, null> | JsonRpcResFail<string, Error>;
-
-export type CaptureErr = string;
+export type ResSucc = JsonRpc.Res.Succ<string, null>;
+export type ResFail = JsonRpc.Res.Fail<string, string>;
