@@ -3,11 +3,6 @@ import assert = require('assert');
 import Document from '../../document';
 import { Req } from './interfaces';
 
-// interface Query extends Readonly<Record<string, string>> {
-// 	readonly db: string;
-// 	readonly bucket: string;
-// 	readonly object: string;
-// }
 
 class BucketObjectAlreadyExists extends Error {
 	public constructor(
@@ -23,9 +18,9 @@ export class Post {
 	) { }
 
 	public async submit(
-		db: string,
 		bucket: string,
 		object: string,
+		db: string,
 	): Promise<Document.Orphan<Req>> {
 		const _id = new ObjectId();
 		const id = _id.toHexString();
@@ -41,11 +36,11 @@ export class Post {
 					request: {
 						jsonrpc: '2.0',
 						id,
-						method: 'capture',
+						method: 'restore',
 						params: {
-							db,
 							bucket,
 							object,
+							db,
 						},
 					},
 					state: Document.State.ORPHAN,
@@ -53,9 +48,8 @@ export class Post {
 				};
 
 				const oldDoc = await this.coll.findOneAndUpdate({
-					'request.method': 'capture',
-					'request.params.bucket': bucket,
-					'request.params.object': object,
+					'request.method': 'restore',
+					'request.params.db': db,
 					state: {
 						$in: [
 							Document.State.ORPHAN,
@@ -77,6 +71,7 @@ export class Post {
 			} finally {
 				await session.endSession();
 			}
+
 			return newDoc;
 		} catch (err) {
 			if (err instanceof BucketObjectAlreadyExists) {

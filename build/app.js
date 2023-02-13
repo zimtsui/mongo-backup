@@ -11,6 +11,7 @@ const koa_ws_filter_1 = require("@zimtsui/koa-ws-filter");
 assert(process.env.TASKLIST_HOST);
 assert(process.env.TASKLIST_DB_NAME);
 assert(process.env.TASKLIST_COLL_NAME);
+assert(process.env.PORT);
 const host = new mongodb_1.MongoClient(process.env.TASKLIST_HOST);
 const db = host.db(process.env.TASKLIST_DB_NAME);
 const coll = db.collection(process.env.TASKLIST_COLL_NAME);
@@ -71,4 +72,5 @@ router.delete('/capture', async (ctx, next) => {
 });
 const app = new Koa();
 app.use(router.routes());
+app.listen(Number.parseInt(process.env.PORT));
 //# sourceMappingURL=app.js.map

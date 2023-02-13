@@ -11,6 +11,7 @@ import { KoaWsFilter } from '@zimtsui/koa-ws-filter';
 assert(process.env.TASKLIST_HOST);
 assert(process.env.TASKLIST_DB_NAME);
 assert(process.env.TASKLIST_COLL_NAME);
+assert(process.env.PORT);
 
 const host = new MongoClient(process.env.TASKLIST_HOST);
 const db = host.db(process.env.TASKLIST_DB_NAME);
@@ -77,3 +78,5 @@ router.delete('/capture', async (ctx, next) => {
 
 const app = new Koa();
 app.use(router.routes());
+
+app.listen(Number.parseInt(process.env.PORT));

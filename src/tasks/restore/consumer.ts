@@ -22,7 +22,7 @@ stream.on('change', async notif => {
 	try {
 		if (
 			notif.operationType === 'insert' &&
-			notif.fullDocument.request.method === 'capture'
+			notif.fullDocument.request.method === 'restore'
 		) {
 			const request = await adopt();
 			execute(request);
@@ -51,10 +51,10 @@ async function execute(request: Req) {
 		await promisify(execFile)(
 			'mongo-backup',
 			[
-				'capture',
+				'restore',
+				request.params.db,
 				request.params.bucket,
 				request.params.object,
-				request.params.db,
 			],
 			{
 				env: {
@@ -138,7 +138,7 @@ async function adopt(): Promise<Req> {
 
 	try {
 		const doc = <Document.Orphan<Req> | null><unknown>await coll.findOneAndUpdate({
-			request: { method: 'capture' },
+			request: { method: 'restore' },
 			state: Document.State.ORPHAN,
 		}, {
 			$set: {

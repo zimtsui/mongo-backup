@@ -15,7 +15,7 @@ const stream = coll.watch();
 stream.on('change', async (notif) => {
     try {
         if (notif.operationType === 'insert' &&
-            notif.fullDocument.request.method === 'capture') {
+            notif.fullDocument.request.method === 'restore') {
             const request = await adopt();
             execute(request);
         }
@@ -42,10 +42,10 @@ stream.on('change', async (notif) => {
 async function execute(request) {
     try {
         await (0, util_1.promisify)(child_process_1.execFile)('mongo-backup', [
-            'capture',
+            'restore',
+            request.params.db,
             request.params.bucket,
             request.params.object,
-            request.params.db,
         ], {
             env: {
                 ...process.env,
@@ -123,7 +123,7 @@ async function adopt() {
     session.startTransaction();
     try {
         const doc = await coll.findOneAndUpdate({
-            request: { method: 'capture' },
+            request: { method: 'restore' },
             state: 0 /* Document.State.ORPHAN */,
         }, {
             $set: {

@@ -3,11 +3,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Post = void 0;
 const mongodb_1 = require("mongodb");
 const assert = require("assert");
-// interface Query extends Readonly<Record<string, string>> {
-// 	readonly db: string;
-// 	readonly bucket: string;
-// 	readonly object: string;
-// }
 class BucketObjectAlreadyExists extends Error {
     constructor(doc) {
         super();
@@ -20,7 +15,7 @@ class Post {
         this.db = db;
         this.coll = coll;
     }
-    async submit(db, bucket, object) {
+    async submit(bucket, object, db) {
         const _id = new mongodb_1.ObjectId();
         const id = _id.toHexString();
         const session = this.host.startSession();
@@ -33,20 +28,19 @@ class Post {
                     request: {
                         jsonrpc: '2.0',
                         id,
-                        method: 'capture',
+                        method: 'restore',
                         params: {
-                            db,
                             bucket,
                             object,
+                            db,
                         },
                     },
                     state: 0 /* Document.State.ORPHAN */,
                     detail: { submitTime: Date.now() },
                 };
                 const oldDoc = await this.coll.findOneAndUpdate({
-                    'request.method': 'capture',
-                    'request.params.bucket': bucket,
-                    'request.params.object': object,
+                    'request.method': 'restore',
+                    'request.params.db': db,
                     state: {
                         $in: [
                             0 /* Document.State.ORPHAN */,
