@@ -1,13 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Post = void 0;
 const mongodb_1 = require("mongodb");
 const assert = require("assert");
-// interface Query extends Readonly<Record<string, string>> {
-// 	readonly db: string;
-// 	readonly bucket: string;
-// 	readonly object: string;
-// }
 class BucketObjectAlreadyExists extends Error {
     constructor(doc) {
         super();
@@ -27,6 +21,7 @@ class Post {
         session.startTransaction();
         try {
             let newDoc;
+            let oldDoc;
             try {
                 newDoc = {
                     _id,
@@ -43,7 +38,7 @@ class Post {
                     state: 0 /* Document.State.ORPHAN */,
                     detail: { submitTime: Date.now() },
                 };
-                const oldDoc = await this.coll.findOneAndUpdate({
+                oldDoc = await this.coll.findOneAndUpdate({
                     'request.method': 'capture',
                     'request.params.bucket': bucket,
                     'request.params.object': object,
@@ -60,7 +55,6 @@ class Post {
                     session,
                 });
                 session.commitTransaction();
-                assert(oldDoc === null, new BucketObjectAlreadyExists(oldDoc));
             }
             catch (err) {
                 await session.abortTransaction();
@@ -69,6 +63,7 @@ class Post {
             finally {
                 await session.endSession();
             }
+            assert(oldDoc === null, new BucketObjectAlreadyExists(oldDoc));
             return newDoc;
         }
         catch (err) {
@@ -82,7 +77,6 @@ class Post {
         }
     }
 }
-exports.Post = Post;
 (function (Post) {
     class AlreadyExists extends Error {
         constructor(doc) {
@@ -98,7 +92,8 @@ exports.Post = Post;
         }
     }
     Post.Conflict = Conflict;
-})(Post = exports.Post || (exports.Post = {}));
+})(Post || (Post = {}));
 var AlreadyExists = Post.AlreadyExists;
 var Conflict = Post.Conflict;
+exports.default = Post;
 //# sourceMappingURL=post.js.map

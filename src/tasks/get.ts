@@ -35,9 +35,9 @@ export class AllGet {
 		id: string,
 	): StateEventEmitter<Document<Req, ResSucc, ResFail>> {
 		return new StateEventEmitter<Document<Req, ResSucc, ResFail>>(
-			<Promise<Document<Req, ResSucc, ResFail>>>this.coll.findOne({
+			this.coll.findOne({
 				_id: ObjectId.createFromHexString(id),
-			}),
+			}) as Promise<Document<Req, ResSucc, ResFail>>,
 			this.broadcast,
 			id,
 			'document',

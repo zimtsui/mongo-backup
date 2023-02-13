@@ -8,7 +8,7 @@ class StateEventEmitter extends EventEmitter {
         super();
         this.ee = ee;
         this.eventName = eventName;
-        this.q = new semque_1.Semque();
+        this.q = new semque_1.default();
         this.listener = (delta) => this.q.push(delta);
         ee.on(eventName, this.listener);
         ee.on('error', (...params) => this.emit('error', ...params));

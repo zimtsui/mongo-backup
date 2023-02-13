@@ -4,9 +4,6 @@ exports.AllGet = void 0;
 const mongodb_1 = require("mongodb");
 const EventEmitter = require("events");
 const state_event_emitter_1 = require("../state-event-emitter");
-// interface Query extends Readonly<Record<string, string>> {
-// 	readonly id: string;
-// }
 class AllGet {
     constructor(host, db, coll, stream) {
         this.host = host;

@@ -6,5 +6,7 @@ export interface Req extends JsonRpc.Req<string, 'restore'> {
         readonly db: string;
     };
 }
-export type ResSucc = JsonRpc.Res.Succ<string, null>;
-export type ResFail = JsonRpc.Res.Fail<string, string>;
+export declare namespace Res {
+    type Succ = JsonRpc.Res.Succ<string, null>;
+    type Fail = JsonRpc.Res.Fail<string, string>;
+}

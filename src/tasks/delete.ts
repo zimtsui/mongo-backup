@@ -35,16 +35,18 @@ export class AllDelete {
 					},
 				}, {
 					session,
+					returnDocument: 'after',
 				}) as unknown as Document;
 
 				session.commitTransaction();
-				assert(after !== null, new NotMatched());
 			} catch (err) {
 				await session.abortTransaction();
 				throw err;
 			} finally {
 				await session.endSession();
 			}
+
+			assert(after !== null, new NotMatched());
 			return after;
 		} catch (err) {
 			if (err instanceof NotMatched) {

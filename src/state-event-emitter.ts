@@ -1,5 +1,5 @@
 import EventEmitter = require("events");
-import { Semque } from "./semque";
+import Semque from "./semque";
 
 
 export class StateEventEmitter<Full, Delta = Full> extends EventEmitter {

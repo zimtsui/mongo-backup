@@ -30,9 +30,9 @@ class AllDelete {
                     },
                 }, {
                     session,
+                    returnDocument: 'after',
                 });
                 session.commitTransaction();
-                assert(after !== null, new NotMatched());
             }
             catch (err) {
                 await session.abortTransaction();
@@ -41,6 +41,7 @@ class AllDelete {
             finally {
                 await session.endSession();
             }
+            assert(after !== null, new NotMatched());
             return after;
         }
         catch (err) {

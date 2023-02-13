@@ -9,7 +9,7 @@ namespace Document {
 		FAILED,
 	}
 
-	export interface Base<Req> {
+	interface Base<Req> {
 		readonly _id: ObjectId;
 		readonly request: Req;
 		readonly state: State;

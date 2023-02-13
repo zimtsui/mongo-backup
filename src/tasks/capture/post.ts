@@ -10,7 +10,7 @@ class BucketObjectAlreadyExists extends Error {
 	) { super(); }
 }
 
-export class Post {
+class Post {
 	public constructor(
 		private host: MongoClient,
 		private db: Db,
@@ -30,6 +30,7 @@ export class Post {
 
 		try {
 			let newDoc: Document.Orphan<Req>;
+			let oldDoc: Document.Orphan<Req> | null;
 			try {
 				newDoc = {
 					_id,
@@ -47,7 +48,7 @@ export class Post {
 					detail: { submitTime: Date.now() },
 				};
 
-				const oldDoc = await this.coll.findOneAndUpdate({
+				oldDoc = await this.coll.findOneAndUpdate({
 					'request.method': 'capture',
 					'request.params.bucket': bucket,
 					'request.params.object': object,
@@ -65,13 +66,14 @@ export class Post {
 				}) as unknown as Document.Orphan<Req> | null;
 
 				session.commitTransaction();
-				assert(oldDoc === null, new BucketObjectAlreadyExists(oldDoc!));
 			} catch (err) {
 				await session.abortTransaction();
 				throw err;
 			} finally {
 				await session.endSession();
 			}
+
+			assert(oldDoc === null, new BucketObjectAlreadyExists(oldDoc!));
 			return newDoc;
 		} catch (err) {
 			if (err instanceof BucketObjectAlreadyExists) {
@@ -85,7 +87,7 @@ export class Post {
 	}
 }
 
-export namespace Post {
+namespace Post {
 	export class AlreadyExists extends Error {
 		public constructor(
 			public doc: Document.Orphan<Req> | Document.Adopted<Req>,
@@ -100,3 +102,5 @@ export namespace Post {
 
 import AlreadyExists = Post.AlreadyExists;
 import Conflict = Post.Conflict;
+
+export default Post;

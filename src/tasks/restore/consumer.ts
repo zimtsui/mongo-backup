@@ -2,8 +2,9 @@ import assert = require("assert");
 import { MongoClient } from "mongodb";
 import Document from "../../document";
 import { execFile } from "child_process";
-import { Req, ResSucc, ResFail } from "./interfaces";
+import { Req, Res } from "./interfaces";
 import { promisify } from "util";
+import { resolve } from "path";
 
 assert(process.env.TASKLIST_HOST);
 assert(process.env.TASKLIST_DB);
@@ -13,7 +14,7 @@ assert(process.env.USERDB_HOST);
 
 const host = new MongoClient(process.env.TASKLIST_HOST);
 const db = host.db(process.env.TASKLIST_DB);
-const coll = db.collection<Document<Req, ResSucc, ResFail>>(process.env.TASKLIST_COLL);
+const coll = db.collection<Document<Req, Res.Succ, Res.Fail>>(process.env.TASKLIST_COLL);
 
 
 const stream = coll.watch();
@@ -49,7 +50,7 @@ stream.on('change', async notif => {
 async function execute(request: Req) {
 	try {
 		await promisify(execFile)(
-			'mongo-backup',
+			resolve(__dirname, '../../../mongo-backup'),
 			[
 				'restore',
 				request.params.db,
@@ -74,7 +75,7 @@ async function succeed(request: Req) {
 	session.startTransaction();
 
 	try {
-		const res: ResSucc = {
+		const res: Res.Succ = {
 			jsonrpc: '2.0',
 			id: request.id,
 			result: null,
@@ -105,7 +106,7 @@ async function fail(request: Req, stderr: string) {
 	session.startTransaction();
 
 	try {
-		const res: ResFail = {
+		const res: Res.Fail = {
 			jsonrpc: '2.0',
 			id: request.id,
 			error: stderr,

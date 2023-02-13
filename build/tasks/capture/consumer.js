@@ -4,6 +4,7 @@ const assert = require("assert");
 const mongodb_1 = require("mongodb");
 const child_process_1 = require("child_process");
 const util_1 = require("util");
+const path_1 = require("path");
 assert(process.env.TASKLIST_HOST);
 assert(process.env.TASKLIST_DB);
 assert(process.env.TASKLIST_COLL);
@@ -41,7 +42,7 @@ stream.on('change', async (notif) => {
 })();
 async function execute(request) {
     try {
-        await (0, util_1.promisify)(child_process_1.execFile)('mongo-backup', [
+        await (0, util_1.promisify)(child_process_1.execFile)((0, path_1.resolve)(__dirname, '../../../mongo-backup'), [
             'capture',
             request.params.bucket,
             request.params.object,

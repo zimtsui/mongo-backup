@@ -2,7 +2,8 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const Koa = require("koa");
 const Router = require("@koa/router");
-const Capture = require("./tasks/capture/post");
+const post_1 = require("./tasks/capture/post");
+const post_2 = require("./tasks/restore/post");
 const mongodb_1 = require("mongodb");
 const assert = require("assert");
 const get_1 = require("./tasks/get");
@@ -16,7 +17,8 @@ const host = new mongodb_1.MongoClient(process.env.TASKLIST_HOST);
 const db = host.db(process.env.TASKLIST_DB_NAME);
 const coll = db.collection(process.env.TASKLIST_COLL_NAME);
 const stream = coll.watch([], { fullDocument: 'updateLookup' });
-const capturePost = new Capture.Post(host, db, coll);
+const capturePost = new post_1.default(host, db, coll);
+const restorePost = new post_2.default(host, db, coll);
 const allGet = new get_1.AllGet(host, db, coll, stream);
 const allDelete = new delete_1.AllDelete(host, db, coll);
 const router = new Router();
@@ -29,7 +31,7 @@ filter.ws(async (ctx, next) => {
     ws.on('close', () => see.close());
     await next();
 });
-router.get('/capture', filter.protocols());
+router.get('/', filter.protocols());
 router.post('/capture', async (ctx, next) => {
     assert(typeof ctx.query.db === 'string');
     assert(typeof ctx.query.bucket === 'string');
@@ -40,11 +42,11 @@ router.post('/capture', async (ctx, next) => {
         ctx.body = doc;
     }
     catch (err) {
-        if (err instanceof Capture.Post.AlreadyExists) {
+        if (err instanceof post_1.default.AlreadyExists) {
             ctx.status = 208;
             ctx.body = err.doc;
         }
-        else if (err instanceof Capture.Post.Conflict) {
+        else if (err instanceof post_1.default.Conflict) {
             ctx.status = 409;
             ctx.body = err.doc;
         }
@@ -53,7 +55,30 @@ router.post('/capture', async (ctx, next) => {
     }
     await next();
 });
-router.delete('/capture', async (ctx, next) => {
+router.post('/restore', async (ctx, next) => {
+    assert(typeof ctx.query.bucket === 'string');
+    assert(typeof ctx.query.object === 'string');
+    assert(typeof ctx.query.db === 'string');
+    try {
+        const doc = await restorePost.submit(ctx.query.db, ctx.query.bucket, ctx.query.object);
+        ctx.status = 201;
+        ctx.body = doc;
+    }
+    catch (err) {
+        if (err instanceof post_2.default.AlreadyExists) {
+            ctx.status = 208;
+            ctx.body = err.doc;
+        }
+        else if (err instanceof post_2.default.Conflict) {
+            ctx.status = 409;
+            ctx.body = err.doc;
+        }
+        else
+            throw err;
+    }
+    await next();
+});
+router.delete('/', async (ctx, next) => {
     assert(typeof ctx.query.id === 'string');
     try {
         const doc = await allDelete.cancel(ctx.query.id);
