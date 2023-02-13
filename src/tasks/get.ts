@@ -25,7 +25,7 @@ export class AllGet {
 		private stream: ChangeStream<Document, ChangeStreamDocument<Document>>,
 	) {
 		this.broadcast.setMaxListeners(Number.POSITIVE_INFINITY);
-		// TODO resume
+		this.stream.on('error', () => process.exit(1));
 		this.stream.on('change', notif => {
 			if (notif.operationType === 'update')
 				this.broadcast.emit(

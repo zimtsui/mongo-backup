@@ -15,7 +15,7 @@ class AllGet {
         this.stream = stream;
         this.broadcast = new EventEmitter();
         this.broadcast.setMaxListeners(Number.POSITIVE_INFINITY);
-        // TODO resume
+        this.stream.on('error', () => process.exit(1));
         this.stream.on('change', notif => {
             if (notif.operationType === 'update')
                 this.broadcast.emit(notif.fullDocument._id.toHexString(), notif.fullDocument);

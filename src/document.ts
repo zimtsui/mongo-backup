@@ -1,7 +1,6 @@
 import { ObjectId } from "mongodb";
 
 namespace Document {
-	// TODO
 	export const enum State {
 		ORPHAN,
 		ADOPTED,
