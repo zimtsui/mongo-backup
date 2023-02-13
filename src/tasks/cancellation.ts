@@ -2,7 +2,7 @@ import { Collection, Db, MongoClient, MongoError, ObjectId } from 'mongodb';
 import Document from '../document';
 
 
-export class AllDelete {
+class Cancellation {
 	public constructor(
 		private host: MongoClient,
 		private db: Db,
@@ -59,7 +59,7 @@ export class AllDelete {
 }
 
 
-export namespace AllDelete {
+namespace Cancellation {
 	export class AlreadyExits extends Error {
 		public constructor(
 			public doc: Document.Cancelled<unknown> | Document.Succeeded<unknown, unknown> | Document.Failed<unknown, unknown>,
@@ -68,5 +68,7 @@ export namespace AllDelete {
 	export class NotExist extends Error { }
 }
 
-import AlreadyExits = AllDelete.AlreadyExits;
-import NotExist = AllDelete.NotExist;
+import AlreadyExits = Cancellation.AlreadyExits;
+import NotExist = Cancellation.NotExist;
+
+export default Cancellation;

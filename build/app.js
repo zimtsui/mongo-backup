@@ -2,12 +2,9 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const Koa = require("koa");
 const Router = require("@koa/router");
-const post_1 = require("./tasks/capture/post");
-const post_2 = require("./tasks/restore/post");
+const tasks_1 = require("./tasks");
 const mongodb_1 = require("mongodb");
 const assert = require("assert");
-const get_1 = require("./tasks/get");
-const delete_1 = require("./tasks/delete");
 const koa_ws_filter_1 = require("@zimtsui/koa-ws-filter");
 assert(process.env.TASKLIST_HOST);
 assert(process.env.TASKLIST_DB_NAME);
@@ -17,10 +14,10 @@ const host = new mongodb_1.MongoClient(process.env.TASKLIST_HOST);
 const db = host.db(process.env.TASKLIST_DB_NAME);
 const coll = db.collection(process.env.TASKLIST_COLL_NAME);
 const stream = coll.watch([], { fullDocument: 'updateLookup' });
-const capturePost = new post_1.default(host, db, coll);
-const restorePost = new post_2.default(host, db, coll);
-const allGet = new get_1.AllGet(host, db, coll, stream);
-const allDelete = new delete_1.AllDelete(host, db, coll);
+const captureSubmission = new tasks_1.Capture.Submission(host, db, coll);
+const restoreSubmission = new tasks_1.Restore.Submission(host, db, coll);
+const allGet = new tasks_1.Inquiry(host, db, coll, stream);
+const allDelete = new tasks_1.Cancellation(host, db, coll);
 const router = new Router();
 const filter = new koa_ws_filter_1.KoaWsFilter();
 filter.ws(async (ctx, next) => {
@@ -37,16 +34,16 @@ router.post('/capture', async (ctx, next) => {
     assert(typeof ctx.query.bucket === 'string');
     assert(typeof ctx.query.object === 'string');
     try {
-        const doc = await capturePost.submit(ctx.query.db, ctx.query.bucket, ctx.query.object);
+        const doc = await captureSubmission.submit(ctx.query.db, ctx.query.bucket, ctx.query.object);
         ctx.status = 201;
         ctx.body = doc;
     }
     catch (err) {
-        if (err instanceof post_1.default.AlreadyExists) {
+        if (err instanceof tasks_1.Capture.Submission.AlreadyExists) {
             ctx.status = 208;
             ctx.body = err.doc;
         }
-        else if (err instanceof post_1.default.Conflict) {
+        else if (err instanceof tasks_1.Capture.Submission.Conflict) {
             ctx.status = 409;
             ctx.body = err.doc;
         }
@@ -60,16 +57,16 @@ router.post('/restore', async (ctx, next) => {
     assert(typeof ctx.query.object === 'string');
     assert(typeof ctx.query.db === 'string');
     try {
-        const doc = await restorePost.submit(ctx.query.db, ctx.query.bucket, ctx.query.object);
+        const doc = await restoreSubmission.submit(ctx.query.db, ctx.query.bucket, ctx.query.object);
         ctx.status = 201;
         ctx.body = doc;
     }
     catch (err) {
-        if (err instanceof post_2.default.AlreadyExists) {
+        if (err instanceof tasks_1.Restore.Submission.AlreadyExists) {
             ctx.status = 208;
             ctx.body = err.doc;
         }
-        else if (err instanceof post_2.default.Conflict) {
+        else if (err instanceof tasks_1.Restore.Submission.Conflict) {
             ctx.status = 409;
             ctx.body = err.doc;
         }
@@ -86,11 +83,11 @@ router.delete('/', async (ctx, next) => {
         ctx.body = doc;
     }
     catch (err) {
-        if (err instanceof delete_1.AllDelete.AlreadyExits) {
+        if (err instanceof tasks_1.Cancellation.AlreadyExits) {
             ctx.status = 208;
             ctx.body = err.doc;
         }
-        else if (err instanceof delete_1.AllDelete.NotExist) {
+        else if (err instanceof tasks_1.Cancellation.NotExist) {
             ctx.status = 404;
         }
     }

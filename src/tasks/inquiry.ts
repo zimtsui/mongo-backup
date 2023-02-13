@@ -5,14 +5,9 @@ import { TypedEventEmitter } from 'mongodb';
 import { StateEventEmitter } from '../state-event-emitter';
 
 
-export class AllGet {
-	private broadcast = <
-		TypedEventEmitter<
-			Record<
-				string,
-				(doc: Document) => void
-			>
-		>>new EventEmitter();
+
+class Inquiry {
+	private broadcast = new EventEmitter() as TypedEventEmitter<Record<string, (doc: Document) => void>>;
 
 	public constructor(
 		private host: MongoClient,
@@ -21,7 +16,10 @@ export class AllGet {
 		private stream: ChangeStream<Document, ChangeStreamDocument<Document>>,
 	) {
 		this.broadcast.setMaxListeners(Number.POSITIVE_INFINITY);
-		this.stream.on('error', () => process.exit(1));
+		this.stream.on('error', err => {
+			console.error(err);
+			process.exit(1);
+		});
 		this.stream.on('change', notif => {
 			if (notif.operationType === 'update')
 				this.broadcast.emit(
@@ -44,3 +42,5 @@ export class AllGet {
 		);
 	}
 }
+
+export default Inquiry;

@@ -1,8 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AllDelete = void 0;
 const mongodb_1 = require("mongodb");
-class AllDelete {
+class Cancellation {
     constructor(host, db, coll) {
         this.host = host;
         this.db = db;
@@ -55,19 +54,19 @@ class AllDelete {
         throw new Error();
     }
 }
-exports.AllDelete = AllDelete;
-(function (AllDelete) {
+(function (Cancellation) {
     class AlreadyExits extends Error {
         constructor(doc) {
             super();
             this.doc = doc;
         }
     }
-    AllDelete.AlreadyExits = AlreadyExits;
+    Cancellation.AlreadyExits = AlreadyExits;
     class NotExist extends Error {
     }
-    AllDelete.NotExist = NotExist;
-})(AllDelete = exports.AllDelete || (exports.AllDelete = {}));
-var AlreadyExits = AllDelete.AlreadyExits;
-var NotExist = AllDelete.NotExist;
-//# sourceMappingURL=delete.js.map
+    Cancellation.NotExist = NotExist;
+})(Cancellation || (Cancellation = {}));
+var AlreadyExits = Cancellation.AlreadyExits;
+var NotExist = Cancellation.NotExist;
+exports.default = Cancellation;
+//# sourceMappingURL=cancellation.js.map

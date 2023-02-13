@@ -1,13 +1,14 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const assert = require("assert");
 const mongodb_1 = require("mongodb");
-class Post {
+class Submission {
     constructor(host, db, coll) {
         this.host = host;
         this.db = db;
         this.coll = coll;
     }
-    async submit(bucket, object, db) {
+    async insert(db, bucket, object) {
         const _id = new mongodb_1.ObjectId();
         const id = _id.toHexString();
         let newDoc;
@@ -20,19 +21,20 @@ class Post {
                 request: {
                     jsonrpc: '2.0',
                     id,
-                    method: 'restore',
+                    method: 'capture',
                     params: {
+                        db,
                         bucket,
                         object,
-                        db,
                     },
                 },
                 state: 0 /* Document.State.ORPHAN */,
                 detail: { submitTime: Date.now() },
             };
             oldDoc = await this.coll.findOneAndUpdate({
-                'request.method': 'restore',
-                'request.params.db': db,
+                'request.method': 'capture',
+                'request.params.bucket': bucket,
+                'request.params.object': object,
                 state: {
                     $in: [
                         0 /* Document.State.ORPHAN */,
@@ -54,31 +56,48 @@ class Post {
         finally {
             await session.endSession();
         }
-        if (oldDoc === null)
-            return newDoc;
-        if (oldDoc.request.params.db === db)
-            throw new AlreadyExists(oldDoc);
-        else
-            throw new Conflict(oldDoc);
+        assert(oldDoc === null, new DocumentAlreadyExists(oldDoc));
+        return newDoc;
+    }
+    async submit(db, bucket, object) {
+        try {
+            return await this.insert(db, bucket, object);
+        }
+        catch (err) {
+            if (err instanceof DocumentAlreadyExists) {
+                if (err.doc.request.params.db === db)
+                    throw new AlreadyExists(err.doc);
+                else
+                    throw new Conflict(err.doc);
+            }
+            else
+                throw err;
+        }
     }
 }
-(function (Post) {
+(function (Submission) {
     class AlreadyExists extends Error {
         constructor(doc) {
             super();
             this.doc = doc;
         }
     }
-    Post.AlreadyExists = AlreadyExists;
+    Submission.AlreadyExists = AlreadyExists;
     class Conflict extends Error {
         constructor(doc) {
             super();
             this.doc = doc;
         }
     }
-    Post.Conflict = Conflict;
-})(Post || (Post = {}));
-var AlreadyExists = Post.AlreadyExists;
-var Conflict = Post.Conflict;
-exports.default = Post;
-//# sourceMappingURL=post.js.map
+    Submission.Conflict = Conflict;
+})(Submission || (Submission = {}));
+var AlreadyExists = Submission.AlreadyExists;
+var Conflict = Submission.Conflict;
+class DocumentAlreadyExists extends Error {
+    constructor(doc) {
+        super();
+        this.doc = doc;
+    }
+}
+exports.default = Submission;
+//# sourceMappingURL=submission.js.map

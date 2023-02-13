@@ -1,14 +1,15 @@
 import { Collection, Db, MongoClient } from 'mongodb';
 import Document from '../../document';
 import { Req } from './interfaces';
-declare class Post {
+declare class Submission {
     private host;
     private db;
     private coll;
     constructor(host: MongoClient, db: Db, coll: Collection<Document>);
+    private insert;
     submit(bucket: string, object: string, db: string): Promise<Document.Orphan<Req>>;
 }
-declare namespace Post {
+declare namespace Submission {
     class AlreadyExists extends Error {
         doc: Document.Orphan<Req> | Document.Adopted<Req>;
         constructor(doc: Document.Orphan<Req> | Document.Adopted<Req>);
@@ -18,4 +19,4 @@ declare namespace Post {
         constructor(doc: Document.Orphan<Req> | Document.Adopted<Req>);
     }
 }
-export default Post;
+export default Submission;
