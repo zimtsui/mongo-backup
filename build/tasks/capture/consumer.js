@@ -17,8 +17,8 @@ stream.on('change', async (notif) => {
     try {
         if (notif.operationType === 'insert' &&
             notif.fullDocument.request.method === 'capture') {
-            const request = await adopt();
-            execute(request);
+            const doc = await adopt();
+            execute(doc);
         }
     }
     catch (err) {
@@ -40,36 +40,36 @@ stream.on('change', async (notif) => {
         console.error(err);
     }
 })();
-async function execute(request) {
+async function execute(doc) {
     try {
         await (0, util_1.promisify)(child_process_1.execFile)((0, path_1.resolve)(__dirname, '../../../mongo-backup'), [
             'capture',
-            request.params.bucket,
-            request.params.object,
-            request.params.db,
+            doc.request.params.bucket,
+            doc.request.params.object,
+            doc.request.params.db,
         ], {
             env: {
                 ...process.env,
                 MONGO_HOST: process.env.USERDB_HOST,
             },
         });
-        succeed(request);
+        succeed(doc);
     }
     catch (err) {
-        fail(request, err.stderr);
+        fail(doc, err.stderr);
     }
 }
-async function succeed(request) {
+async function succeed(doc) {
     const session = host.startSession();
-    session.startTransaction();
     try {
+        session.startTransaction();
         const res = {
             jsonrpc: '2.0',
-            id: request.id,
+            id: doc.request.id,
             result: null,
         };
         await coll.updateOne({
-            'request.id': request.id,
+            _id: doc._id,
             state: 1 /* Document.State.ADOPTED */,
         }, {
             $set: {
@@ -88,17 +88,17 @@ async function succeed(request) {
         await session.endSession();
     }
 }
-async function fail(request, stderr) {
+async function fail(doc, stderr) {
     const session = host.startSession();
-    session.startTransaction();
     try {
+        session.startTransaction();
         const res = {
             jsonrpc: '2.0',
-            id: request.id,
+            id: doc.request.id,
             error: stderr,
         };
         await coll.updateOne({
-            'request.id': request.id,
+            _id: doc._id,
             state: 1 /* Document.State.ADOPTED */,
         }, {
             $set: {
@@ -120,10 +120,11 @@ async function fail(request, stderr) {
 class NoOrphan extends Error {
 }
 async function adopt() {
+    let newDoc;
     const session = host.startSession();
-    session.startTransaction();
     try {
-        const doc = await coll.findOneAndUpdate({
+        session.startTransaction();
+        newDoc = await coll.findOneAndUpdate({
             request: { method: 'capture' },
             state: 0 /* Document.State.ORPHAN */,
         }, {
@@ -132,10 +133,11 @@ async function adopt() {
                 'detail.responder': `${process.env.HOSTNAME}:${process.env.PORT}`,
                 'detail.adoptTime': Date.now(),
             }
-        }, { session });
-        assert(doc !== null, new NoOrphan());
+        }, {
+            session,
+            returnDocument: 'after',
+        });
         session.commitTransaction();
-        return doc.request;
     }
     catch (error) {
         await session.abortTransaction();
@@ -144,5 +146,7 @@ async function adopt() {
     finally {
         await session.endSession();
     }
+    assert(newDoc !== null, new NoOrphan());
+    return newDoc;
 }
 //# sourceMappingURL=consumer.js.map

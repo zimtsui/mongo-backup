@@ -2,7 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AllDelete = void 0;
 const mongodb_1 = require("mongodb");
-const assert = require("assert");
 class AllDelete {
     constructor(host, db, coll) {
         this.host = host;
@@ -11,58 +10,52 @@ class AllDelete {
     }
     async cancel(id) {
         const _id = mongodb_1.ObjectId.createFromHexString(id);
+        let after;
         const session = this.host.startSession();
-        session.startTransaction();
         try {
-            let after;
-            try {
-                after = await this.coll.findOneAndUpdate({
-                    _id,
-                    state: {
-                        $in: [
-                            0 /* Document.State.ORPHAN */,
-                            1 /* Document.State.ADOPTED */,
-                        ],
-                    },
-                }, {
-                    $set: {
-                        state: 2 /* Document.State.CANCELLED */,
-                    },
-                }, {
-                    session,
-                    returnDocument: 'after',
-                });
-                session.commitTransaction();
-            }
-            catch (err) {
-                await session.abortTransaction();
-                throw err;
-            }
-            finally {
-                await session.endSession();
-            }
-            assert(after !== null, new NotMatched());
-            return after;
+            session.startTransaction();
+            after = await this.coll.findOneAndUpdate({
+                _id,
+                state: {
+                    $in: [
+                        0 /* Document.State.ORPHAN */,
+                        1 /* Document.State.ADOPTED */,
+                    ],
+                },
+            }, {
+                $set: {
+                    state: 2 /* Document.State.CANCELLED */,
+                },
+            }, {
+                session,
+                returnDocument: 'after',
+            });
+            session.commitTransaction();
         }
         catch (err) {
-            if (err instanceof NotMatched) {
-                const doc = await this.coll.findOne({
-                    _id,
-                });
-                assert(doc !== null, new NotExist());
-                assert([
-                    2 /* Document.State.CANCELLED */,
-                    3 /* Document.State.SUCCEEDED */,
-                    4 /* Document.State.FAILED */,
-                ].includes(doc.state), new AlreadyExits(doc));
-            }
+            await session.abortTransaction();
             throw err;
         }
+        finally {
+            await session.endSession();
+        }
+        if (after !== null)
+            return after;
+        const doc = await this.coll.findOne({
+            _id,
+        });
+        if (doc === null)
+            throw new NotExist();
+        if ([
+            2 /* Document.State.CANCELLED */,
+            3 /* Document.State.SUCCEEDED */,
+            4 /* Document.State.FAILED */,
+        ].includes(doc.state))
+            throw new AlreadyExits(doc);
+        throw new Error();
     }
 }
 exports.AllDelete = AllDelete;
-class NotMatched extends Error {
-}
 (function (AllDelete) {
     class AlreadyExits extends Error {
         constructor(doc) {

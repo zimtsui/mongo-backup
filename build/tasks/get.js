@@ -21,7 +21,7 @@ class AllGet {
     inquire(id) {
         return new state_event_emitter_1.StateEventEmitter(this.coll.findOne({
             _id: mongodb_1.ObjectId.createFromHexString(id),
-        }), this.broadcast, id, 'document', (doc0, doc) => doc0.state <= doc.state);
+        }), this.broadcast, id, (doc0, doc) => doc0.state <= doc.state);
     }
 }
 exports.AllGet = AllGet;

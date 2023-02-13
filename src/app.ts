@@ -31,7 +31,7 @@ filter.ws(async (ctx, next) => {
 	const ws = await ctx.upgrade();
 	assert(typeof ctx.query.id === 'string');
 	const see = allGet.inquire(ctx.query.id);
-	see.on('document', (doc: Document) => void ws.send(JSON.stringify(doc)));
+	see.on('state', doc => void ws.send(JSON.stringify(doc)));
 	ws.on('close', () => see.close());
 	await next();
 });

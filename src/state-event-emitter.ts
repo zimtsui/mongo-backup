@@ -8,12 +8,11 @@ export class StateEventEmitter<Full, Delta = Full> extends EventEmitter {
 	public constructor(
 		fullPromise: Promise<Full>,
 		private ee: EventEmitter,
-		private eventName: string | symbol,
-		emitAs: string | symbol,
-		after: (full: Full, delta: Delta) => boolean,
+		private event: string | symbol,
+		before: (full: Full, delta: Delta) => boolean,
 	) {
 		super();
-		ee.on(eventName, this.listener);
+		ee.on(event, this.listener);
 		ee.on('error', (...params) => this.emit('error', ...params));
 
 		(async () => {
@@ -21,8 +20,8 @@ export class StateEventEmitter<Full, Delta = Full> extends EventEmitter {
 			let started = false;
 			for (; ;) {
 				const delta = await this.q.pop();
-				started ||= after(full, delta);
-				if (started) this.emit(emitAs, delta);
+				if (started ||= before(full, delta))
+					this.emit('state', delta);
 			}
 		})().catch(err => {
 			if (err instanceof Closed) return;
@@ -30,12 +29,24 @@ export class StateEventEmitter<Full, Delta = Full> extends EventEmitter {
 		});
 	}
 
-	private listener = (delta: Delta) => this.q.push(delta);
+	private listener = (state: Delta) => void this.q.push(state);
 
 	public close(): void {
-		this.ee.off(this.eventName, this.listener);
+		this.ee.off(this.event, this.listener);
 		this.q.throw(new Closed());
 	}
 }
 
 class Closed extends Error { }
+
+interface Events<State> {
+	state(state: State): void;
+	error(...params: any[]): void;
+}
+
+export interface StateEventEmitter<Full, Delta = Full> extends EventEmitter {
+	on<Event extends keyof Events<Delta>>(event: Event, listener: Events<Delta>[Event]): this;
+	once<Event extends keyof Events<Delta>>(event: Event, listener: Events<Delta>[Event]): this;
+	off<Event extends keyof Events<Delta>>(event: Event, listener: Events<Delta>[Event]): this;
+	emit<Event extends keyof Events<Delta>>(event: Event, ...params: Parameters<Events<Delta>[Event]>): boolean;
+}

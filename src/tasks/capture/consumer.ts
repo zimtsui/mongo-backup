@@ -25,8 +25,8 @@ stream.on('change', async notif => {
 			notif.operationType === 'insert' &&
 			notif.fullDocument.request.method === 'capture'
 		) {
-			const request = await adopt();
-			execute(request);
+			const doc = await adopt();
+			execute(doc);
 		}
 	} catch (err) {
 		if (err instanceof NoOrphan) return;
@@ -47,15 +47,15 @@ stream.on('change', async notif => {
 })();
 
 
-async function execute(request: Req) {
+async function execute(doc: Document.Adopted<Req>) {
 	try {
 		await promisify(execFile)(
 			resolve(__dirname, '../../../mongo-backup'),
 			[
 				'capture',
-				request.params.bucket,
-				request.params.object,
-				request.params.db,
+				doc.request.params.bucket,
+				doc.request.params.object,
+				doc.request.params.db,
 			],
 			{
 				env: {
@@ -64,24 +64,24 @@ async function execute(request: Req) {
 				},
 			},
 		);
-		succeed(request);
+		succeed(doc);
 	} catch (err: any) {
-		fail(request, err.stderr);
+		fail(doc, <string>err.stderr);
 	}
 }
 
-async function succeed(request: Req) {
+async function succeed(doc: Document.Adopted<Req>) {
 	const session = host.startSession();
-	session.startTransaction();
-
 	try {
+		session.startTransaction();
+
 		const res: Res.Succ = {
 			jsonrpc: '2.0',
-			id: request.id,
+			id: doc.request.id,
 			result: null,
 		};
 		await coll.updateOne({
-			'request.id': request.id,
+			_id: doc._id,
 			state: Document.State.ADOPTED,
 		}, {
 			$set: {
@@ -101,18 +101,18 @@ async function succeed(request: Req) {
 }
 
 
-async function fail(request: Req, stderr: string) {
+async function fail(doc: Document.Adopted<Req>, stderr: string) {
 	const session = host.startSession();
-	session.startTransaction();
-
 	try {
+		session.startTransaction();
+
 		const res: Res.Fail = {
 			jsonrpc: '2.0',
-			id: request.id,
+			id: doc.request.id,
 			error: stderr,
 		};
 		await coll.updateOne({
-			'request.id': request.id,
+			_id: doc._id,
 			state: Document.State.ADOPTED,
 		}, {
 			$set: {
@@ -133,12 +133,13 @@ async function fail(request: Req, stderr: string) {
 
 class NoOrphan extends Error { }
 
-async function adopt(): Promise<Req> {
-	const session = host.startSession();
-	session.startTransaction();
+async function adopt(): Promise<Document.Adopted<Req>> {
+	let newDoc: Document.Adopted<Req> | null;
 
+	const session = host.startSession();
 	try {
-		const doc = <Document.Orphan<Req> | null><unknown>await coll.findOneAndUpdate({
+		session.startTransaction();
+		newDoc = <Document.Adopted<Req> | null><unknown>await coll.findOneAndUpdate({
 			request: { method: 'capture' },
 			state: Document.State.ORPHAN,
 		}, {
@@ -147,15 +148,18 @@ async function adopt(): Promise<Req> {
 				'detail.responder': `${process.env.HOSTNAME}:${process.env.PORT}`,
 				'detail.adoptTime': Date.now(),
 			}
-		}, { session });
-		assert(doc !== null, new NoOrphan());
-
+		}, {
+			session,
+			returnDocument: 'after',
+		});
 		session.commitTransaction();
-		return doc.request;
 	} catch (error) {
 		await session.abortTransaction();
 		throw error;
 	} finally {
 		await session.endSession();
 	}
+
+	assert(newDoc !== null, new NoOrphan());
+	return newDoc;
 }

@@ -4,22 +4,21 @@ exports.StateEventEmitter = void 0;
 const EventEmitter = require("events");
 const semque_1 = require("./semque");
 class StateEventEmitter extends EventEmitter {
-    constructor(fullPromise, ee, eventName, emitAs, after) {
+    constructor(fullPromise, ee, event, before) {
         super();
         this.ee = ee;
-        this.eventName = eventName;
+        this.event = event;
         this.q = new semque_1.default();
-        this.listener = (delta) => this.q.push(delta);
-        ee.on(eventName, this.listener);
+        this.listener = (state) => void this.q.push(state);
+        ee.on(event, this.listener);
         ee.on('error', (...params) => this.emit('error', ...params));
         (async () => {
             const full = await fullPromise;
             let started = false;
             for (;;) {
                 const delta = await this.q.pop();
-                started || (started = after(full, delta));
-                if (started)
-                    this.emit(emitAs, delta);
+                if (started || (started = before(full, delta)))
+                    this.emit('state', delta);
             }
         })().catch(err => {
             if (err instanceof Closed)
@@ -28,7 +27,7 @@ class StateEventEmitter extends EventEmitter {
         });
     }
     close() {
-        this.ee.off(this.eventName, this.listener);
+        this.ee.off(this.event, this.listener);
         this.q.throw(new Closed());
     }
 }

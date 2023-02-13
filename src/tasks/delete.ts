@@ -1,5 +1,4 @@
 import { Collection, Db, MongoClient, MongoError, ObjectId } from 'mongodb';
-import assert = require('assert');
 import Document from '../document';
 
 
@@ -15,61 +14,50 @@ export class AllDelete {
 	): Promise<Document> {
 		const _id = ObjectId.createFromHexString(id);
 
+		let after: Document;
 		const session = this.host.startSession();
-		session.startTransaction();
-
 		try {
-			let after: Document;
-			try {
-				after = await this.coll.findOneAndUpdate({
-					_id,
-					state: {
-						$in: [
-							Document.State.ORPHAN,
-							Document.State.ADOPTED,
-						],
-					},
-				}, {
-					$set: {
-						state: Document.State.CANCELLED,
-					},
-				}, {
-					session,
-					returnDocument: 'after',
-				}) as unknown as Document;
+			session.startTransaction();
+			after = await this.coll.findOneAndUpdate({
+				_id,
+				state: {
+					$in: [
+						Document.State.ORPHAN,
+						Document.State.ADOPTED,
+					],
+				},
+			}, {
+				$set: {
+					state: Document.State.CANCELLED,
+				},
+			}, {
+				session,
+				returnDocument: 'after',
+			}) as unknown as Document;
 
-				session.commitTransaction();
-			} catch (err) {
-				await session.abortTransaction();
-				throw err;
-			} finally {
-				await session.endSession();
-			}
-
-			assert(after !== null, new NotMatched());
-			return after;
+			session.commitTransaction();
 		} catch (err) {
-			if (err instanceof NotMatched) {
-				const doc = await this.coll.findOne({
-					_id,
-				});
-				assert(doc !== null, new NotExist());
-				assert(
-					[
-						Document.State.CANCELLED,
-						Document.State.SUCCEEDED,
-						Document.State.FAILED,
-					].includes(doc.state),
-					new AlreadyExits(doc as Document.Cancelled<unknown> | Document.Succeeded<unknown, unknown> | Document.Failed<unknown, unknown>),
-				);
-			}
+			await session.abortTransaction();
 			throw err;
+		} finally {
+			await session.endSession();
 		}
+
+		if (after !== null) return after;
+		const doc = await this.coll.findOne({
+			_id,
+		});
+		if (doc === null) throw new NotExist();
+		if ([
+			Document.State.CANCELLED,
+			Document.State.SUCCEEDED,
+			Document.State.FAILED,
+		].includes(doc.state))
+			throw new AlreadyExits(doc as Document.Cancelled<unknown> | Document.Succeeded<unknown, unknown> | Document.Failed<unknown, unknown>);
+		throw new Error();
 	}
 }
 
-
-class NotMatched extends Error { }
 
 export namespace AllDelete {
 	export class AlreadyExits extends Error {

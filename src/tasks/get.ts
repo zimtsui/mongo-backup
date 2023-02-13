@@ -40,7 +40,6 @@ export class AllGet {
 			}) as Promise<Document<Req, ResSucc, ResFail>>,
 			this.broadcast,
 			id,
-			'document',
 			(doc0, doc) => doc0.state <= doc.state,
 		);
 	}

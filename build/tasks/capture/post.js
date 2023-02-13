@@ -1,13 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongodb_1 = require("mongodb");
-const assert = require("assert");
-class BucketObjectAlreadyExists extends Error {
-    constructor(doc) {
-        super();
-        this.doc = doc;
-    }
-}
 class Post {
     constructor(host, db, coll) {
         this.host = host;
@@ -17,64 +10,57 @@ class Post {
     async submit(db, bucket, object) {
         const _id = new mongodb_1.ObjectId();
         const id = _id.toHexString();
+        let newDoc;
+        let oldDoc;
         const session = this.host.startSession();
-        session.startTransaction();
         try {
-            let newDoc;
-            let oldDoc;
-            try {
-                newDoc = {
-                    _id,
-                    request: {
-                        jsonrpc: '2.0',
-                        id,
-                        method: 'capture',
-                        params: {
-                            db,
-                            bucket,
-                            object,
-                        },
+            session.startTransaction();
+            newDoc = {
+                _id,
+                request: {
+                    jsonrpc: '2.0',
+                    id,
+                    method: 'capture',
+                    params: {
+                        db,
+                        bucket,
+                        object,
                     },
-                    state: 0 /* Document.State.ORPHAN */,
-                    detail: { submitTime: Date.now() },
-                };
-                oldDoc = await this.coll.findOneAndUpdate({
-                    'request.method': 'capture',
-                    'request.params.bucket': bucket,
-                    'request.params.object': object,
-                    state: {
-                        $in: [
-                            0 /* Document.State.ORPHAN */,
-                            1 /* Document.State.ADOPTED */,
-                        ],
-                    },
-                }, {
-                    $setOnInsert: newDoc,
-                }, {
-                    upsert: true,
-                    session,
-                });
-                session.commitTransaction();
-            }
-            catch (err) {
-                await session.abortTransaction();
-                throw err;
-            }
-            finally {
-                await session.endSession();
-            }
-            assert(oldDoc === null, new BucketObjectAlreadyExists(oldDoc));
-            return newDoc;
+                },
+                state: 0 /* Document.State.ORPHAN */,
+                detail: { submitTime: Date.now() },
+            };
+            oldDoc = await this.coll.findOneAndUpdate({
+                'request.method': 'capture',
+                'request.params.bucket': bucket,
+                'request.params.object': object,
+                state: {
+                    $in: [
+                        0 /* Document.State.ORPHAN */,
+                        1 /* Document.State.ADOPTED */,
+                    ],
+                },
+            }, {
+                $setOnInsert: newDoc,
+            }, {
+                upsert: true,
+                session,
+            });
+            session.commitTransaction();
         }
         catch (err) {
-            if (err instanceof BucketObjectAlreadyExists) {
-                if (err.doc.request.params.db === db)
-                    throw new AlreadyExists(err.doc);
-                else
-                    throw new Conflict(err.doc);
-            }
+            await session.abortTransaction();
             throw err;
         }
+        finally {
+            await session.endSession();
+        }
+        if (oldDoc === null)
+            return newDoc;
+        if (oldDoc.request.params.db === db)
+            throw new AlreadyExists(oldDoc);
+        else
+            throw new Conflict(oldDoc);
     }
 }
 (function (Post) {
