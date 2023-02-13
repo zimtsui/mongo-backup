@@ -13,7 +13,7 @@
     "start-restore": "node ./build/tasks/restore/consumer"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=14"
   },
   "author": "Zim",
   "dependencies": {

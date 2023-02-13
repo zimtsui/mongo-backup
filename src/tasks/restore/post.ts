@@ -1,4 +1,4 @@
-import { Collection, Db, MongoClient, MongoError, ObjectId } from 'mongodb';
+import { Collection, Db, MongoClient, ObjectId } from 'mongodb';
 import Document from '../../document';
 import { Req } from './interfaces';
 
