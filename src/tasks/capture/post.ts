@@ -1,7 +1,7 @@
 import { Collection, Db, MongoClient, MongoError, ObjectId } from 'mongodb';
 import assert = require('assert');
 import Document from '../../document';
-import { Req, ResSucc, ResFail } from './interfaces';
+import { Req } from './interfaces';
 
 // interface Query extends Readonly<Record<string, string>> {
 // 	readonly db: string;
@@ -9,15 +9,9 @@ import { Req, ResSucc, ResFail } from './interfaces';
 // 	readonly object: string;
 // }
 
-class BucketObjectAlreadyExists extends Error { }
-export class AlreadyExists extends Error {
+class BucketObjectAlreadyExists extends Error {
 	public constructor(
-		public id: string,
-	) { super(); }
-}
-export class Conflict extends Error {
-	public constructor(
-		public id: string,
+		public doc: Document.Orphan<Req> | Document.Adopted<Req>,
 	) { super(); }
 }
 
@@ -32,17 +26,17 @@ export class Post {
 		db: string,
 		bucket: string,
 		object: string,
-	): Promise<string> {
+	): Promise<Document.Orphan<Req>> {
 		const _id = new ObjectId();
 		const id = _id.toHexString();
 
 		const session = this.host.startSession();
 		session.startTransaction();
-		let oldDoc: Document.Orphan<Req> | null;
 
 		try {
+			let newDoc: Document.Orphan<Req>;
 			try {
-				const newDoc: Document.Orphan<Req> = {
+				newDoc = {
 					_id,
 					request: {
 						jsonrpc: '2.0',
@@ -58,7 +52,7 @@ export class Post {
 					detail: { submitTime: Date.now() },
 				};
 
-				oldDoc = <Document.Orphan<Req> | null><unknown>await this.coll.findOneAndUpdate({
+				const oldDoc = await this.coll.findOneAndUpdate({
 					'request.method': 'capture',
 					'request.params.bucket': bucket,
 					'request.params.object': object,
@@ -73,10 +67,10 @@ export class Post {
 				}, {
 					upsert: true,
 					session,
-				});
+				}) as unknown as Document.Orphan<Req> | null;
 
 				session.commitTransaction();
-				assert(oldDoc === null, new BucketObjectAlreadyExists());
+				assert(oldDoc === null, new BucketObjectAlreadyExists(oldDoc!));
 			} catch (err) {
 				await session.abortTransaction();
 				throw err;
@@ -84,21 +78,37 @@ export class Post {
 				await session.endSession();
 			}
 
-			const result = await this.coll.findOne({
-				_id,
-				'request.params.db': db,
-			});
-			assert(result !== null);
-			return id;
+			assert(
+				await this.coll.findOne({
+					_id,
+					'request.params.db': db,
+				}) !== null,
+			);
+			return newDoc;
 		} catch (err) {
 			if (err instanceof BucketObjectAlreadyExists) {
-				if (oldDoc!.request.params.db === db)
-					throw new AlreadyExists(id);
+				if (err.doc.request.params.db === db)
+					throw new AlreadyExists(err.doc);
 				else
-					throw new Conflict(id);
-
+					throw new Conflict(err.doc);
 			}
 			throw err;
 		}
 	}
 }
+
+export namespace Post {
+	export class AlreadyExists extends Error {
+		public constructor(
+			public doc: Document.Orphan<Req> | Document.Adopted<Req>,
+		) { super(); }
+	}
+	export class Conflict extends Error {
+		public constructor(
+			public doc: Document.Orphan<Req> | Document.Adopted<Req>,
+		) { super(); }
+	}
+}
+
+import AlreadyExists = Post.AlreadyExists;
+import Conflict = Post.Conflict;

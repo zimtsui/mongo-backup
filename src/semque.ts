@@ -5,12 +5,21 @@ export class Semque<T> {
 	private queue: T[] = [];
 
 	public push(x: T) {
-		this.queue.push(x);
 		this.sem.v();
+		this.queue.push(x);
 	}
 
 	public async pop(): Promise<T> {
 		await this.sem.p();
+		return this.queue.pop()!;
+	}
+
+	public throw(err: Error) {
+		this.sem.throw(err);
+	}
+
+	public tryPop() {
+		this.sem.tryp();
 		return this.queue.pop()!;
 	}
 }

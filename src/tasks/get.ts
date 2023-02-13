@@ -2,14 +2,14 @@ import { Collection, Db, MongoClient, ObjectId, ChangeStream, ChangeStreamDocume
 import assert = require('assert');
 import Document from '../document';
 import EventEmitter = require('events');
-import { events2Stream } from '../events2stream';
 import { TypedEventEmitter } from 'mongodb';
+import { StateEventEmitter } from '../state-event-emitter';
 
 // interface Query extends Readonly<Record<string, string>> {
 // 	readonly id: string;
 // }
 
-export class Get {
+export class AllGet {
 	private broadcast = <
 		TypedEventEmitter<
 			Record<
@@ -35,24 +35,17 @@ export class Get {
 		});
 	}
 
-	public async* inquire<Req, ResSucc, ResFail>(
+	public inquire<Req, ResSucc, ResFail>(
 		id: string,
-	): AsyncGenerator<Document<Req, ResSucc, ResFail>, void> {
-		const docs = await events2Stream<Document<Req, ResSucc, ResFail>>(
+	): StateEventEmitter<Document<Req, ResSucc, ResFail>> {
+		return new StateEventEmitter<Document<Req, ResSucc, ResFail>>(
+			<Promise<Document<Req, ResSucc, ResFail>>>this.coll.findOne({
+				_id: ObjectId.createFromHexString(id),
+			}),
 			this.broadcast,
 			id,
+			'document',
+			(doc0, doc) => doc0.state <= doc.state,
 		);
-		try {
-			const initial = <Document<Req, ResSucc, ResFail>>await this.coll.findOne({
-				_id: ObjectId.createFromHexString(id),
-			});
-			assert(initial !== null);
-			yield initial;
-			for await (const doc of docs)
-				if (doc.state > initial.state)
-					yield doc;
-		} finally {
-			await docs.return();
-		}
 	}
 }

@@ -1,17 +1,20 @@
 import { Collection, Db, MongoClient } from 'mongodb';
 import Document from '../../document';
-export declare class AlreadyExists extends Error {
-    id: string;
-    constructor(id: string);
-}
-export declare class Conflict extends Error {
-    id: string;
-    constructor(id: string);
-}
+import { Req } from './interfaces';
 export declare class Post {
     private host;
     private db;
     private coll;
     constructor(host: MongoClient, db: Db, coll: Collection<Document>);
-    submit(db: string, bucket: string, object: string): Promise<string>;
+    submit(db: string, bucket: string, object: string): Promise<Document.Orphan<Req>>;
+}
+export declare namespace Post {
+    class AlreadyExists extends Error {
+        doc: Document.Orphan<Req> | Document.Adopted<Req>;
+        constructor(doc: Document.Orphan<Req> | Document.Adopted<Req>);
+    }
+    class Conflict extends Error {
+        doc: Document.Orphan<Req> | Document.Adopted<Req>;
+        constructor(doc: Document.Orphan<Req> | Document.Adopted<Req>);
+    }
 }

@@ -8,11 +8,18 @@ class Semque {
         this.queue = [];
     }
     push(x) {
-        this.queue.push(x);
         this.sem.v();
+        this.queue.push(x);
     }
     async pop() {
         await this.sem.p();
+        return this.queue.pop();
+    }
+    throw(err) {
+        this.sem.throw(err);
+    }
+    tryPop() {
+        this.sem.tryp();
         return this.queue.pop();
     }
 }

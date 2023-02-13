@@ -1,7 +1,7 @@
 import assert = require("assert");
 import { MongoClient } from "mongodb";
 import Document from "../../document";
-import { execFile, ExecFileException } from "child_process";
+import { execFile } from "child_process";
 import { Req, ResSucc, ResFail } from "./interfaces";
 import { promisify } from "util";
 
@@ -37,7 +37,7 @@ stream.on('change', async notif => {
 	try {
 		for (; ;) {
 			const request = await adopt();
-			execute(request);
+			execute(request).catch(console.error)
 		}
 	} catch (err) {
 		if (err instanceof NoOrphan) return;

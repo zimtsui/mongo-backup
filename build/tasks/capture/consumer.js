@@ -30,7 +30,7 @@ stream.on('change', async (notif) => {
     try {
         for (;;) {
             const request = await adopt();
-            execute(request);
+            execute(request).catch(console.error);
         }
     }
     catch (err) {

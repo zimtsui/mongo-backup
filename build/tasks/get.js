@@ -1,14 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Get = void 0;
+exports.AllGet = void 0;
 const mongodb_1 = require("mongodb");
-const assert = require("assert");
 const EventEmitter = require("events");
-const events2stream_1 = require("../events2stream");
+const state_event_emitter_1 = require("../state-event-emitter");
 // interface Query extends Readonly<Record<string, string>> {
 // 	readonly id: string;
 // }
-class Get {
+class AllGet {
     constructor(host, db, coll, stream) {
         this.host = host;
         this.db = db;
@@ -22,22 +21,11 @@ class Get {
                 this.broadcast.emit(notif.fullDocument._id.toHexString(), notif.fullDocument);
         });
     }
-    async *inquire(id) {
-        const docs = await (0, events2stream_1.events2Stream)(this.broadcast, id);
-        try {
-            const initial = await this.coll.findOne({
-                _id: mongodb_1.ObjectId.createFromHexString(id),
-            });
-            assert(initial !== null);
-            yield initial;
-            for await (const doc of docs)
-                if (doc.state > initial.state)
-                    yield doc;
-        }
-        finally {
-            await docs.return();
-        }
+    inquire(id) {
+        return new state_event_emitter_1.StateEventEmitter(this.coll.findOne({
+            _id: mongodb_1.ObjectId.createFromHexString(id),
+        }), this.broadcast, id, 'document', (doc0, doc) => doc0.state <= doc.state);
     }
 }
-exports.Get = Get;
+exports.AllGet = AllGet;
 //# sourceMappingURL=get.js.map
