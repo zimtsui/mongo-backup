@@ -1,13 +1,9 @@
 import { Collection, Db, MongoClient, ObjectId, ChangeStream, ChangeStreamDocument } from 'mongodb';
-import assert = require('assert');
 import Document from '../document';
 import EventEmitter = require('events');
 import { TypedEventEmitter } from 'mongodb';
 import { StateEventEmitter } from '../state-event-emitter';
 
-// interface Query extends Readonly<Record<string, string>> {
-// 	readonly id: string;
-// }
 
 export class AllGet {
 	private broadcast = <

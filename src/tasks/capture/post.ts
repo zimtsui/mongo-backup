@@ -3,11 +3,6 @@ import assert = require('assert');
 import Document from '../../document';
 import { Req } from './interfaces';
 
-// interface Query extends Readonly<Record<string, string>> {
-// 	readonly db: string;
-// 	readonly bucket: string;
-// 	readonly object: string;
-// }
 
 class BucketObjectAlreadyExists extends Error {
 	public constructor(
