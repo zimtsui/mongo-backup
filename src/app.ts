@@ -7,13 +7,13 @@ import assert = require('assert');
 import { KoaWsFilter } from '@zimtsui/koa-ws-filter';
 
 assert(process.env.TASKLIST_HOST);
-assert(process.env.TASKLIST_DB_NAME);
-assert(process.env.TASKLIST_COLL_NAME);
+assert(process.env.TASKLIST_DB);
+assert(process.env.TASKLIST_COLL);
 assert(process.env.PORT);
 
-const host = new MongoClient(process.env.TASKLIST_HOST);
-const db = host.db(process.env.TASKLIST_DB_NAME);
-const coll = db.collection<Document>(process.env.TASKLIST_COLL_NAME);
+const host = new MongoClient(`mongodb://${process.env.TASKLIST_HOST}`);
+const db = host.db(process.env.TASKLIST_DB);
+const coll = db.collection<Document>(process.env.TASKLIST_COLL);
 const stream = coll.watch([], { fullDocument: 'updateLookup' })
 
 const captureSubmission = new Capture.Submission(host, db, coll);
