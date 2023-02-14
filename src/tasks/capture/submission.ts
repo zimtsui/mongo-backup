@@ -59,7 +59,7 @@ class Submission {
 				session,
 			}) as unknown as Document.Orphan<Req> | null;
 
-			session.commitTransaction();
+			await session.commitTransaction();
 		} catch (err) {
 			await session.abortTransaction();
 			throw err;

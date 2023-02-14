@@ -47,7 +47,7 @@ class Submission {
                 upsert: true,
                 session,
             });
-            session.commitTransaction();
+            await session.commitTransaction();
         }
         catch (err) {
             await session.abortTransaction();
