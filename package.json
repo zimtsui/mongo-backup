@@ -8,7 +8,7 @@
     "clean": "rm -rf ./build",
     "rebuild": "npm run clean && npm run build",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node ./build/app",
+    "start": "source ./env.sh && node ./build/app",
     "start-capture": "node ./build/tasks/capture/consumer",
     "start-restore": "node ./build/tasks/restore/consumer"
   },
