@@ -13,7 +13,7 @@ class Cancellation {
         const session = this.host.startSession();
         try {
             session.startTransaction();
-            after = await this.coll.findOneAndUpdate({
+            ({ value: after } = await this.coll.findOneAndUpdate({
                 _id,
                 state: {
                     $in: [
@@ -28,7 +28,7 @@ class Cancellation {
             }, {
                 session,
                 returnDocument: 'after',
-            });
+            }));
             session.commitTransaction();
         }
         catch (err) {

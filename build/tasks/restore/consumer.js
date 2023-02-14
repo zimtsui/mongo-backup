@@ -124,7 +124,7 @@ async function adopt() {
     const session = host.startSession();
     try {
         session.startTransaction();
-        newDoc = await coll.findOneAndUpdate({
+        ({ value: newDoc } = await coll.findOneAndUpdate({
             request: { method: 'restore' },
             state: 0 /* Document.State.ORPHAN */,
         }, {
@@ -136,7 +136,7 @@ async function adopt() {
         }, {
             session,
             returnDocument: 'after',
-        });
+        }));
         session.commitTransaction();
     }
     catch (error) {

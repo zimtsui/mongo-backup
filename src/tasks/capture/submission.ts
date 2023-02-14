@@ -1,5 +1,5 @@
 import assert = require('assert');
-import { Collection, Db, MongoClient, ObjectId } from 'mongodb';
+import { Collection, Db, ModifyResult, MongoClient, ObjectId } from 'mongodb';
 import Document from '../../document';
 import { Req } from './interfaces';
 
@@ -21,7 +21,7 @@ class Submission {
 		const id = _id.toHexString();
 
 		let newDoc: Document.Orphan<Req>;
-		let oldDoc: Document.Orphan<Req> | null;
+		let oldDoc: Document.Orphan<Req> | Document.Adopted<Req> | null;
 
 		const session = this.host.startSession();
 		try {
@@ -42,7 +42,7 @@ class Submission {
 				detail: { submitTime: Date.now() },
 			};
 
-			oldDoc = await this.coll.findOneAndUpdate({
+			({ value: oldDoc } = await this.coll.findOneAndUpdate({
 				'request.method': 'capture',
 				'request.params.bucket': bucket,
 				'request.params.object': object,
@@ -57,7 +57,7 @@ class Submission {
 			}, {
 				upsert: true,
 				session,
-			}) as unknown as Document.Orphan<Req> | null;
+			}) as ModifyResult<Document.Orphan<Req> | Document.Adopted<Req>>);
 
 			await session.commitTransaction();
 		} catch (err) {

@@ -1,5 +1,5 @@
 import assert = require("assert");
-import { MongoClient } from "mongodb";
+import { ModifyResult, MongoClient } from "mongodb";
 import Document from "../../document";
 import { execFile } from "child_process";
 import { Req, Res } from "./interfaces";
@@ -139,7 +139,7 @@ async function adopt(): Promise<Document.Adopted<Req>> {
 	const session = host.startSession();
 	try {
 		session.startTransaction();
-		newDoc = <Document.Adopted<Req> | null><unknown>await coll.findOneAndUpdate({
+		({ value: newDoc } = await coll.findOneAndUpdate({
 			request: { method: 'restore' },
 			state: Document.State.ORPHAN,
 		}, {
@@ -151,7 +151,7 @@ async function adopt(): Promise<Document.Adopted<Req>> {
 		}, {
 			session,
 			returnDocument: 'after',
-		});
+		}) as ModifyResult<Document.Adopted<Req>>);
 		session.commitTransaction();
 	} catch (error) {
 		await session.abortTransaction();

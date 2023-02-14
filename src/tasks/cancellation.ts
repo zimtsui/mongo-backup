@@ -1,4 +1,4 @@
-import { Collection, Db, MongoClient, MongoError, ObjectId } from 'mongodb';
+import { Collection, Db, ModifyResult, MongoClient, MongoError, ObjectId } from 'mongodb';
 import Document from '../document';
 
 
@@ -14,11 +14,11 @@ class Cancellation {
 	): Promise<Document> {
 		const _id = ObjectId.createFromHexString(id);
 
-		let after: Document;
+		let after: Document | null;
 		const session = this.host.startSession();
 		try {
 			session.startTransaction();
-			after = await this.coll.findOneAndUpdate({
+			({ value: after } = await this.coll.findOneAndUpdate({
 				_id,
 				state: {
 					$in: [
@@ -33,7 +33,7 @@ class Cancellation {
 			}, {
 				session,
 				returnDocument: 'after',
-			}) as unknown as Document;
+			}) as ModifyResult<Document>);
 
 			session.commitTransaction();
 		} catch (err) {

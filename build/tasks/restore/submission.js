@@ -31,7 +31,7 @@ class Submission {
                 state: 0 /* Document.State.ORPHAN */,
                 detail: { submitTime: Date.now() },
             };
-            oldDoc = await this.coll.findOneAndUpdate({
+            ({ value: oldDoc } = await this.coll.findOneAndUpdate({
                 'request.method': 'restore',
                 'request.params.db': db,
                 state: {
@@ -45,7 +45,7 @@ class Submission {
             }, {
                 upsert: true,
                 session,
-            });
+            }));
             await session.commitTransaction();
         }
         catch (err) {
