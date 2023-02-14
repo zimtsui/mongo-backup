@@ -29,7 +29,7 @@ class Cancellation {
                 session,
                 returnDocument: 'after',
             }));
-            session.commitTransaction();
+            await session.commitTransaction();
         }
         catch (err) {
             await session.abortTransaction();

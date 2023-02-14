@@ -35,7 +35,7 @@ class Cancellation {
 				returnDocument: 'after',
 			}) as ModifyResult<Document>);
 
-			session.commitTransaction();
+			await session.commitTransaction();
 		} catch (err) {
 			await session.abortTransaction();
 			throw err;

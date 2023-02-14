@@ -78,7 +78,7 @@ async function succeed(doc) {
                 'detail.response': res,
             }
         }, { session });
-        session.commitTransaction();
+        await session.commitTransaction();
     }
     catch (error) {
         await session.abortTransaction();
@@ -107,7 +107,7 @@ async function fail(doc, stderr) {
                 'detail.response': res,
             }
         }, { session });
-        session.commitTransaction();
+        await session.commitTransaction();
     }
     catch (error) {
         await session.abortTransaction();
@@ -137,7 +137,7 @@ async function adopt() {
             session,
             returnDocument: 'after',
         }));
-        session.commitTransaction();
+        await session.commitTransaction();
     }
     catch (error) {
         await session.abortTransaction();

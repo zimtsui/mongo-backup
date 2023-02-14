@@ -91,7 +91,7 @@ async function succeed(doc: Document.Adopted<Req>) {
 			}
 		}, { session });
 
-		session.commitTransaction();
+		await session.commitTransaction();
 	} catch (error) {
 		await session.abortTransaction();
 		throw error;
@@ -122,7 +122,7 @@ async function fail(doc: Document.Adopted<Req>, stderr: string) {
 			}
 		}, { session });
 
-		session.commitTransaction();
+		await session.commitTransaction();
 	} catch (error) {
 		await session.abortTransaction();
 		throw error;
@@ -152,7 +152,7 @@ async function adopt(): Promise<Document.Adopted<Req>> {
 			session,
 			returnDocument: 'after',
 		}) as ModifyResult<Document.Adopted<Req>>);
-		session.commitTransaction();
+		await session.commitTransaction();
 	} catch (error) {
 		await session.abortTransaction();
 		throw error;
