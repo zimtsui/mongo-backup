@@ -47,7 +47,7 @@ class Cancellation {
 		const doc = await this.coll.findOne({
 			_id,
 		});
-		if (doc === null) throw new NotExist();
+		if (doc === null) throw new NotFound();
 		if ([
 			Document.State.CANCELLED,
 			Document.State.SUCCEEDED,
@@ -65,10 +65,10 @@ namespace Cancellation {
 			public doc: Document.Cancelled<unknown> | Document.Succeeded<unknown, unknown> | Document.Failed<unknown, unknown>,
 		) { super(); }
 	}
-	export class NotExist extends Error { }
+	export class NotFound extends Error { }
 }
 
 import AlreadyExits = Cancellation.AlreadyExits;
-import NotExist = Cancellation.NotExist;
+import NotFound = Cancellation.NotFound;
 
 export default Cancellation;

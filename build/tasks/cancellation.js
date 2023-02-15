@@ -44,7 +44,7 @@ class Cancellation {
             _id,
         });
         if (doc === null)
-            throw new NotExist();
+            throw new NotFound();
         if ([
             2 /* Document.State.CANCELLED */,
             3 /* Document.State.SUCCEEDED */,
@@ -62,11 +62,11 @@ class Cancellation {
         }
     }
     Cancellation.AlreadyExits = AlreadyExits;
-    class NotExist extends Error {
+    class NotFound extends Error {
     }
-    Cancellation.NotExist = NotExist;
+    Cancellation.NotFound = NotFound;
 })(Cancellation || (Cancellation = {}));
 var AlreadyExits = Cancellation.AlreadyExits;
-var NotExist = Cancellation.NotExist;
+var NotFound = Cancellation.NotFound;
 exports.default = Cancellation;
 //# sourceMappingURL=cancellation.js.map

@@ -6,6 +6,7 @@ const tasks_1 = require("./tasks");
 const mongodb_1 = require("mongodb");
 const assert = require("assert");
 const koa_ws_filter_1 = require("@zimtsui/koa-ws-filter");
+const events_1 = require("events");
 assert(process.env.TASKLIST_HOST);
 assert(process.env.TASKLIST_DB);
 assert(process.env.TASKLIST_COLL);
@@ -16,17 +17,28 @@ const coll = db.collection(process.env.TASKLIST_COLL);
 const stream = coll.watch([], { fullDocument: 'updateLookup' });
 const captureSubmission = new tasks_1.Capture.Submission(host, db, coll);
 const restoreSubmission = new tasks_1.Restore.Submission(host, db, coll);
-const allGet = new tasks_1.Inquiry(host, db, coll, stream);
-const allDelete = new tasks_1.Cancellation(host, db, coll);
+const inquiry = new tasks_1.Inquiry(host, db, coll, stream);
+const cancellation = new tasks_1.Cancellation(host, db, coll);
 const router = new Router();
 const filter = new koa_ws_filter_1.KoaWsFilter();
 filter.ws(async (ctx, next) => {
-    const ws = await ctx.upgrade();
     assert(typeof ctx.query.id === 'string');
-    const see = allGet.inquire(ctx.query.id);
-    see.on('state', doc => void ws.send(JSON.stringify(doc)));
-    ws.on('close', () => see.close());
-    await next();
+    try {
+        const stream = inquiry.inquire(ctx.query.id);
+        stream.on('error', () => void stream.close());
+        const [doc0] = await (0, events_1.once)(stream, 'state');
+        const ws = await ctx.upgrade();
+        ws.on('close', () => stream.close());
+        ws.send(JSON.stringify(doc0));
+        stream.on('state', doc => void ws.send(JSON.stringify(doc)));
+        await next();
+    }
+    catch (err) {
+        if (err instanceof tasks_1.Inquiry.NotFound)
+            ctx.status = 404;
+        else
+            throw err;
+    }
 });
 router.get('/', filter.protocols());
 router.post('/capture', async (ctx, next) => {
@@ -78,7 +90,7 @@ router.post('/restore', async (ctx, next) => {
 router.delete('/', async (ctx, next) => {
     assert(typeof ctx.query.id === 'string');
     try {
-        const doc = await allDelete.cancel(ctx.query.id);
+        const doc = await cancellation.cancel(ctx.query.id);
         ctx.status = 200;
         ctx.body = doc;
     }
@@ -87,7 +99,7 @@ router.delete('/', async (ctx, next) => {
             ctx.status = 208;
             ctx.body = err.doc;
         }
-        else if (err instanceof tasks_1.Cancellation.NotExist) {
+        else if (err instanceof tasks_1.Cancellation.NotFound) {
             ctx.status = 404;
         }
     }

@@ -12,7 +12,7 @@ declare namespace Cancellation {
         doc: Document.Cancelled<unknown> | Document.Succeeded<unknown, unknown> | Document.Failed<unknown, unknown>;
         constructor(doc: Document.Cancelled<unknown> | Document.Succeeded<unknown, unknown> | Document.Failed<unknown, unknown>);
     }
-    class NotExist extends Error {
+    class NotFound extends Error {
     }
 }
 export default Cancellation;

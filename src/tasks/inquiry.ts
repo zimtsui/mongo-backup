@@ -2,7 +2,8 @@ import { Collection, Db, MongoClient, ObjectId, ChangeStream, ChangeStreamDocume
 import Document from '../document';
 import EventEmitter = require('events');
 import { TypedEventEmitter } from 'mongodb';
-import { StateEventEmitter } from '../state-event-emitter';
+import StateStream from '../state-stream';
+import assert = require('assert');
 
 
 
@@ -29,18 +30,32 @@ class Inquiry {
 		});
 	}
 
+	private async find<Req, ResSucc, ResFail>(
+		id: string,
+	): Promise<Document<Req, ResSucc, ResFail>> {
+		const doc = await this.coll.findOne({
+			_id: ObjectId.createFromHexString(id),
+		}) as Document<Req, ResSucc, ResFail> | null;
+		assert(doc !== null, new NotFound());
+		return doc;
+	}
+
 	public inquire<Req, ResSucc, ResFail>(
 		id: string,
-	): StateEventEmitter<Document<Req, ResSucc, ResFail>> {
-		return new StateEventEmitter<Document<Req, ResSucc, ResFail>>(
-			this.coll.findOne({
-				_id: ObjectId.createFromHexString(id),
-			}) as Promise<Document<Req, ResSucc, ResFail>>,
+	): StateStream<Document<Req, ResSucc, ResFail>> {
+		return new StateStream(
+			this.find<Req, ResSucc, ResFail>(id),
 			this.broadcast,
 			id,
-			(doc0, doc) => doc0.state <= doc.state,
+			(doc0, doc) => doc0.state < doc.state,
 		);
 	}
 }
+
+namespace Inquiry {
+	export class NotFound extends Error { }
+}
+
+import NotFound = Inquiry.NotFound;
 
 export default Inquiry;

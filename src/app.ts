@@ -5,6 +5,7 @@ import { MongoClient } from 'mongodb';
 import Document from './document';
 import assert = require('assert');
 import { KoaWsFilter } from '@zimtsui/koa-ws-filter';
+import { once } from 'events';
 
 assert(process.env.TASKLIST_HOST);
 assert(process.env.TASKLIST_DB);
@@ -18,19 +19,32 @@ const stream = coll.watch([], { fullDocument: 'updateLookup' })
 
 const captureSubmission = new Capture.Submission(host, db, coll);
 const restoreSubmission = new Restore.Submission(host, db, coll);
-const allGet = new Inquiry(host, db, coll, stream);
-const allDelete = new Cancellation(host, db, coll);
+const inquiry = new Inquiry(host, db, coll, stream);
+const cancellation = new Cancellation(host, db, coll);
 
 const router = new Router();
 const filter = new KoaWsFilter();
 
 filter.ws(async (ctx, next) => {
-	const ws = await ctx.upgrade();
 	assert(typeof ctx.query.id === 'string');
-	const see = allGet.inquire(ctx.query.id);
-	see.on('state', doc => void ws.send(JSON.stringify(doc)));
-	ws.on('close', () => see.close());
-	await next();
+
+	try {
+		const stream = inquiry.inquire(ctx.query.id);
+		stream.on('error', () => void stream.close());
+
+		const [doc0] = <[Document]>await once(stream, 'state');
+		const ws = await ctx.upgrade();
+		ws.on('close', () => stream.close());
+		ws.send(JSON.stringify(doc0));
+
+		stream.on('state', doc => void ws.send(JSON.stringify(doc)));
+		await next();
+	} catch (err) {
+		if (err instanceof Inquiry.NotFound)
+			ctx.status = 404;
+		else
+			throw err;
+	}
 });
 
 router.get('/', filter.protocols());
@@ -86,14 +100,14 @@ router.post('/restore', async (ctx, next) => {
 router.delete('/', async (ctx, next) => {
 	assert(typeof ctx.query.id === 'string');
 	try {
-		const doc = await allDelete.cancel(ctx.query.id);
+		const doc = await cancellation.cancel(ctx.query.id);
 		ctx.status = 200;
 		ctx.body = doc;
 	} catch (err) {
 		if (err instanceof Cancellation.AlreadyExits) {
 			ctx.status = 208;
 			ctx.body = err.doc;
-		} else if (err instanceof Cancellation.NotExist) {
+		} else if (err instanceof Cancellation.NotFound) {
 			ctx.status = 404;
 		}
 	}
