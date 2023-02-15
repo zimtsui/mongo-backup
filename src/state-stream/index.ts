@@ -1,10 +1,19 @@
+import assert = require("assert");
 import EventEmitter = require("events");
 import EventBuffer from "./event-buffer";
+
+
+const enum State {
+	BUFFERING,
+	FLUSHING,
+	DETACHED,
+}
 
 
 class StateStream<State> extends EventEmitter {
 	private eventBuffer: EventBuffer;
 	private errorBuffer: EventBuffer;
+	private state = State.BUFFERING;
 
 	public constructor(
 		private currentPromise: Promise<State>,
@@ -22,13 +31,15 @@ class StateStream<State> extends EventEmitter {
 		let current: State;
 		try {
 			current = await this.currentPromise;
-			this.emit('state', current);
 		} catch (error) {
 			this.emit('error', error);
 			return;
 		}
 		this.eventBuffer.flush();
 		this.errorBuffer.flush();
+		this.state = State.FLUSHING;
+
+		this.emit('state', current);
 		let started = false;
 		this.eventBuffer.on('event', state => {
 			if (started ||= this.before(current, state))
@@ -37,10 +48,9 @@ class StateStream<State> extends EventEmitter {
 		this.errorBuffer.on('event', error => void this.emit('error', error));
 	}
 
-	/**
-	 * 在第一个状态到来之前关闭，会导致未定义的结果。
-	 */
 	public close() {
+		assert(this.state !== State.BUFFERING);
+		this.state = State.DETACHED;
 		this.eventBuffer.close();
 		this.errorBuffer.close();
 	}

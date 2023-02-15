@@ -3,8 +3,9 @@ import EventEmitter = require("events");
 declare class StateStream<State> extends EventEmitter {
     private currentPromise;
     private before;
-    private eb;
-    private ebError;
+    private eventBuffer;
+    private errorBuffer;
+    private state;
     constructor(currentPromise: Promise<State>, ee: EventEmitter, event: string | symbol, before: (state0: State, state: State) => boolean);
     private open;
     close(): void;
