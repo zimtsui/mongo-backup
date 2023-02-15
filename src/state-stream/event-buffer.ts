@@ -1,4 +1,3 @@
-import assert = require("assert");
 import EventEmitter = require("events");
 import Semque from "../semque";
 
@@ -48,7 +47,5 @@ interface EventBuffer extends EventEmitter {
 	off<Event extends keyof Events>(event: Event, listener: Events[Event]): this;
 	emit<Event extends keyof Events>(event: Event, ...params: Parameters<Events[Event]>): boolean;
 }
-
-
 
 export default EventBuffer;

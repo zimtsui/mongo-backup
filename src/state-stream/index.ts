@@ -1,13 +1,10 @@
 import EventEmitter = require("events");
 import EventBuffer from "./event-buffer";
 
-/*
-	在第一个状态到来之前关闭，会导致未定义的结果。
- */
 
 class StateStream<State> extends EventEmitter {
-	private eb: EventBuffer;
-	private ebError: EventBuffer;
+	private eventBuffer: EventBuffer;
+	private errorBuffer: EventBuffer;
 
 	public constructor(
 		private currentPromise: Promise<State>,
@@ -16,8 +13,8 @@ class StateStream<State> extends EventEmitter {
 		private before: (state0: State, state: State) => boolean,
 	) {
 		super();
-		this.eb = new EventBuffer(ee, event);
-		this.ebError = new EventBuffer(ee, 'error');
+		this.eventBuffer = new EventBuffer(ee, event);
+		this.errorBuffer = new EventBuffer(ee, 'error');
 		this.open();
 	}
 
@@ -25,24 +22,27 @@ class StateStream<State> extends EventEmitter {
 		let current: State;
 		try {
 			current = await this.currentPromise;
+			this.emit('state', current);
 		} catch (error) {
 			this.emit('error', error);
 			return;
 		}
-		this.emit('state', current);
-		this.eb.flush();
-		this.ebError.flush();
+		this.eventBuffer.flush();
+		this.errorBuffer.flush();
 		let started = false;
-		this.eb.on('event', state => {
+		this.eventBuffer.on('event', state => {
 			if (started ||= this.before(current, state))
 				this.emit('state', state);
 		});
-		this.ebError.on('event', error => void this.emit('error', error));
+		this.errorBuffer.on('event', error => void this.emit('error', error));
 	}
 
+	/**
+	 * 在第一个状态到来之前关闭，会导致未定义的结果。
+	 */
 	public close() {
-		this.eb.close();
-		this.ebError.close();
+		this.eventBuffer.close();
+		this.errorBuffer.close();
 	}
 }
 
