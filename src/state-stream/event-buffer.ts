@@ -1,8 +1,8 @@
 import EventEmitter = require("events");
-import Semque from "../semque";
+import { Semque } from "../semque";
 
 
-class EventBuffer extends EventEmitter {
+export class EventBuffer extends EventEmitter {
 	private q = new Semque<any[]>();
 
 	public constructor(
@@ -33,7 +33,7 @@ class EventBuffer extends EventEmitter {
 	}
 }
 
-namespace EventBuffer {
+export namespace EventBuffer {
 	export class Closed extends Error { }
 }
 
@@ -41,11 +41,9 @@ interface Events {
 	event(...params: any[]): void;
 }
 
-interface EventBuffer extends EventEmitter {
+export interface EventBuffer extends EventEmitter {
 	on<Event extends keyof Events>(event: Event, listener: Events[Event]): this;
 	once<Event extends keyof Events>(event: Event, listener: Events[Event]): this;
 	off<Event extends keyof Events>(event: Event, listener: Events[Event]): this;
 	emit<Event extends keyof Events>(event: Event, ...params: Parameters<Events[Event]>): boolean;
 }
-
-export default EventBuffer;

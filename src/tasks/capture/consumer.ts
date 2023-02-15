@@ -6,13 +6,14 @@ import { Req, Res } from "./interfaces";
 import { promisify } from "util";
 import { resolve } from "path";
 
-assert(process.env.TASKLIST_HOST);
+assert(process.env.TASKLIST_HOST_URI);
 assert(process.env.TASKLIST_DB);
 assert(process.env.TASKLIST_COLL);
 
-assert(process.env.USERDB_HOST);
+assert(process.env.BACKUP_MONGO_HOST_URI);
+assert(process.env.BACKUP_S3_HOST_ALIAS);
 
-const host = new MongoClient(process.env.TASKLIST_HOST);
+const host = new MongoClient(process.env.TASKLIST_HOST_URI);
 const db = host.db(process.env.TASKLIST_DB);
 const coll = db.collection<Document<Req, Res.Succ, Res.Fail>>(process.env.TASKLIST_COLL);
 

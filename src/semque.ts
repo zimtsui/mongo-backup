@@ -2,7 +2,7 @@ import { Semaphore } from "@zimtsui/coroutine-locks";
 import * as CoroutineLocks from "@zimtsui/coroutine-locks";
 
 
-class Semque<T> {
+export class Semque<T> {
 	private sem = new Semaphore();
 	private queue: T[] = [];
 
@@ -26,8 +26,6 @@ class Semque<T> {
 	}
 }
 
-namespace Semque {
+export namespace Semque {
 	export import TryLockError = CoroutineLocks.TryLockError;
 }
-
-export default Semque

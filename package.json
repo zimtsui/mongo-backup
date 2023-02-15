@@ -1,16 +1,14 @@
 {
   "name": "mongo-backup",
   "version": "0.0.1",
-  "main": "./build/index.js",
-  "types": "./build/index.d.ts",
   "scripts": {
     "build": "tsc -b ./src/tsconfig.json",
     "clean": "rm -rf ./build",
     "rebuild": "npm run clean && npm run build",
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "set -a; . ./env.sh && node --enable-source-maps ./build/app",
-    "start-capture": "node ./build/tasks/capture/consumer",
-    "start-restore": "node ./build/tasks/restore/consumer"
+    "capture": "node ./build/tasks/capture/consumer",
+    "restore": "node ./build/tasks/restore/consumer"
   },
   "engines": {
     "node": ">=16"

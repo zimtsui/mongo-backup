@@ -1,6 +1,6 @@
 import assert = require("assert");
 import EventEmitter = require("events");
-import EventBuffer from "./event-buffer";
+import { EventBuffer } from "./event-buffer";
 
 
 const enum State {
@@ -10,7 +10,7 @@ const enum State {
 }
 
 
-class StateStream<State> extends EventEmitter {
+export class StateStream<State> extends EventEmitter {
 	private eventBuffer: EventBuffer;
 	private errorBuffer: EventBuffer;
 	private state = State.BUFFERING;
@@ -61,11 +61,9 @@ interface Events<State> {
 	error(error: unknown): void;
 }
 
-interface StateStream<State> extends EventEmitter {
+export interface StateStream<State> extends EventEmitter {
 	on<Event extends keyof Events<State>>(event: Event, listener: Events<State>[Event]): this;
 	once<Event extends keyof Events<State>>(event: Event, listener: Events<State>[Event]): this;
 	off<Event extends keyof Events<State>>(event: Event, listener: Events<State>[Event]): this;
 	emit<Event extends keyof Events<State>>(event: Event, ...params: Parameters<Events<State>[Event]>): boolean;
 }
-
-export default StateStream;
