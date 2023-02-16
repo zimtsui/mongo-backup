@@ -1,12 +1,13 @@
-import { Executor } from "../../async-rpc/executor";
+import { Executor } from "./async-rpc/executor";
 import assert = require("assert");
 import { ChangeStream, Collection, Db, MongoClient } from "mongodb";
-import { Document } from "../../async-rpc/interfaces";
-import { Adoption } from "../../async-rpc/executor/adoption";
-import { Success } from "../../async-rpc/executor/success";
-import { Failure } from "../../async-rpc/executor/failure";
-import { execute } from "./execute";
-import { Method, Params, Result, ErrDesc } from "./interfaces";
+import { Document } from "./async-rpc/interfaces";
+import { Adoption } from "./async-rpc/executor/adoption";
+import { Success } from "./async-rpc/executor/success";
+import { Failure } from "./async-rpc/executor/failure";
+import { execute } from "./tasks/capture/execute";
+import * as Capture from "./tasks/capture/interfaces";
+import * as Restore from './tasks/restore/interfaces';
 import { adapt } from "startable-adaptor";
 import { createStartable } from "startable";
 
@@ -16,12 +17,11 @@ assert(process.env.TASKLIST_HOST_URI);
 assert(process.env.TASKLIST_DB);
 assert(process.env.TASKLIST_COLL);
 
-class App {
+class Worker {
 	public $s = createStartable(
 		this.rawStart.bind(this),
 		this.rawStop.bind(this),
 	);
-	private executor?: Executor<Method, Params, Result, ErrDesc>;
 	private host?: MongoClient;
 	private db?: Db;
 	private coll?: Collection<Document>;
@@ -30,6 +30,9 @@ class App {
 	private adoption?: Adoption;
 	private success?: Success;
 	private failure?: Failure;
+
+	private captureExecutor?: Executor<Capture.Method, Capture.Params, Capture.Result, Capture.ErrDesc>;
+	private restoreExecutor?: Executor<Restore.Method, Restore.Params, Restore.Result, Restore.ErrDesc>;
 
 	private async rawStart() {
 		this.host = new MongoClient(process.env.TASKLIST_HOST_URI!);
@@ -43,7 +46,7 @@ class App {
 		this.success = new Success(this.host, this.db, this.coll);
 		this.failure = new Failure(this.host, this.db, this.coll);
 
-		this.executor = new Executor(
+		this.captureExecutor = new Executor(
 			this.stream,
 			this.adoption,
 			this.success,
@@ -51,14 +54,24 @@ class App {
 			'capture',
 			execute,
 		);
-		await this.executor.$s.start(this.$s.stop);
+		this.restoreExecutor = new Executor(
+			this.stream,
+			this.adoption,
+			this.success,
+			this.failure,
+			'restore',
+			execute,
+		);
+		await this.captureExecutor.$s.start(this.$s.stop);
+		await this.restoreExecutor.$s.start(this.$s.stop);
 	}
 
 	private async rawStop() {
-		if (this.executor) await this.executor.$s.stop();
+		if (this.captureExecutor) await this.captureExecutor.$s.stop();
+		if (this.restoreExecutor) await this.restoreExecutor.$s.stop();
 		if (this.stream) await this.stream.close();
 		if (this.host) await this.host.close();
 	}
 }
 
-adapt(new App().$s);
+adapt(new Worker().$s);

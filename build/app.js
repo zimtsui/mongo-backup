@@ -89,4 +89,4 @@ router.delete('/', async (ctx, next) => {
 const app = new Koa();
 app.use(router.routes());
 app.listen(Number.parseInt(process.env.PORT));
-//# sourceMappingURL=gateway.js.map
+//# sourceMappingURL=app.js.map
