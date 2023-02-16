@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.Semque = void 0;
 const coroutine_locks_1 = require("@zimtsui/coroutine-locks");
 const CoroutineLocks = require("@zimtsui/coroutine-locks");
 class Semque {
@@ -23,8 +24,8 @@ class Semque {
         return this.queue.pop();
     }
 }
+exports.Semque = Semque;
 (function (Semque) {
     Semque.TryLockError = CoroutineLocks.TryLockError;
-})(Semque || (Semque = {}));
-exports.default = Semque;
+})(Semque = exports.Semque || (exports.Semque = {}));
 //# sourceMappingURL=semque.js.map

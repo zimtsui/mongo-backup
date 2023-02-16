@@ -1,5 +1,5 @@
 import * as CoroutineLocks from "@zimtsui/coroutine-locks";
-declare class Semque<T> {
+export declare class Semque<T> {
     private sem;
     private queue;
     push(x: T): void;
@@ -7,7 +7,6 @@ declare class Semque<T> {
     throw(err: Error): void;
     tryPop(): NonNullable<T>;
 }
-declare namespace Semque {
+export declare namespace Semque {
     export import TryLockError = CoroutineLocks.TryLockError;
 }
-export default Semque;

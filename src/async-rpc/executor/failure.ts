@@ -26,7 +26,7 @@ export class Failure {
 
 			const res: Res.Fail<errDesc> = {
 				jsonrpc: '2.0',
-				id: doc.detail.request.id,
+				id: doc.request.id,
 				error: errDesc,
 			};
 			({ modifiedCount } = await this.coll.updateOne({
@@ -35,8 +35,8 @@ export class Failure {
 			}, {
 				$set: {
 					'state': Document.State.FAILED,
-					'detail.failTime': Date.now(),
-					'detail.response': res,
+					'failTime': Date.now(),
+					'response': res,
 				}
 			}, { session }));
 

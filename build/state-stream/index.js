@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.StateStream = void 0;
 const assert = require("assert");
 const EventEmitter = require("events");
 const event_buffer_1 = require("./event-buffer");
@@ -9,8 +10,8 @@ class StateStream extends EventEmitter {
         this.currentPromise = currentPromise;
         this.before = before;
         this.state = 0 /* State.BUFFERING */;
-        this.eventBuffer = new event_buffer_1.default(ee, event);
-        this.errorBuffer = new event_buffer_1.default(ee, 'error');
+        this.eventBuffer = new event_buffer_1.EventBuffer(ee, event);
+        this.errorBuffer = new event_buffer_1.EventBuffer(ee, 'error');
         this.open();
     }
     async open() {
@@ -40,5 +41,5 @@ class StateStream extends EventEmitter {
         this.errorBuffer.close();
     }
 }
-exports.default = StateStream;
+exports.StateStream = StateStream;
 //# sourceMappingURL=index.js.map

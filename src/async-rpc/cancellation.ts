@@ -29,7 +29,7 @@ export class Cancellation {
 			}, {
 				$set: {
 					'state': Document.State.CANCELLED,
-					'detail.cancelTime': Date.now(),
+					'cancelTime': Date.now(),
 				},
 			}, {
 				session,

@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.EventBuffer = void 0;
 const EventEmitter = require("events");
 const semque_1 = require("../semque");
 class EventBuffer extends EventEmitter {
@@ -7,7 +8,7 @@ class EventBuffer extends EventEmitter {
         super();
         this.ee = ee;
         this.event = event;
-        this.q = new semque_1.default();
+        this.q = new semque_1.Semque();
         this.pipe = (...params) => void this.q.push(params);
         this.ee.on(this.event, this.pipe);
     }
@@ -29,10 +30,10 @@ class EventBuffer extends EventEmitter {
         this.q.throw(new EventBuffer.Closed());
     }
 }
+exports.EventBuffer = EventBuffer;
 (function (EventBuffer) {
     class Closed extends Error {
     }
     EventBuffer.Closed = Closed;
-})(EventBuffer || (EventBuffer = {}));
-exports.default = EventBuffer;
+})(EventBuffer = exports.EventBuffer || (exports.EventBuffer = {}));
 //# sourceMappingURL=event-buffer.js.map

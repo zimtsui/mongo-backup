@@ -33,16 +33,14 @@ export class Submission {
 			newDoc = {
 				_id,
 				state: Document.State.ORPHAN,
-				detail: {
-					request: {
-						jsonrpc: '2.0',
-						id,
-						method,
-						params,
-					},
-					lock,
-					submitTime: Date.now(),
+				request: {
+					jsonrpc: '2.0',
+					id,
+					method,
+					params,
 				},
+				lock,
+				submitTime: Date.now(),
 			};
 
 			({ value: oldDoc } = await this.coll.findOneAndUpdate({

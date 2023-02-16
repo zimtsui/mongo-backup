@@ -26,7 +26,7 @@ export class Success {
 
 			const res: Res.Succ<result> = {
 				jsonrpc: '2.0',
-				id: doc.detail.request.id,
+				id: doc.request.id,
 				result,
 			};
 			({ modifiedCount } = await this.coll.updateOne({
@@ -35,8 +35,8 @@ export class Success {
 			}, {
 				$set: {
 					'state': Document.State.SUCCEEDED,
-					'detail.succeedTime': Date.now(),
-					'detail.response': res,
+					'succeedTime': Date.now(),
+					'response': res,
 				}
 			}, { session }));
 

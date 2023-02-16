@@ -21,12 +21,12 @@ export class Adoption {
 		try {
 			session.startTransaction();
 			({ value: newDoc } = await this.coll.findOneAndUpdate({
-				'detail.request.method': method,
+				'request.method': method,
 				'state': Document.State.ORPHAN,
 			}, {
 				$set: {
 					'state': Document.State.ADOPTED,
-					'detail.adoptTime': Date.now(),
+					'adoptTime': Date.now(),
 				}
 			}, {
 				session,

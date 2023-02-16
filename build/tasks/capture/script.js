@@ -1,0 +1,21 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const executor_1 = require("../../async-rpc/executor");
+const assert = require("assert");
+const mongodb_1 = require("mongodb");
+const adoption_1 = require("../../async-rpc/executor/adoption");
+const success_1 = require("../../async-rpc/executor/success");
+const failure_1 = require("../../async-rpc/executor/failure");
+const execute_1 = require("./execute");
+assert(process.env.TASKLIST_HOST_URI);
+assert(process.env.TASKLIST_DB);
+assert(process.env.TASKLIST_COLL);
+const host = new mongodb_1.MongoClient(process.env.TASKLIST_HOST_URI);
+const db = host.db(process.env.TASKLIST_DB);
+const coll = db.collection(process.env.TASKLIST_COLL);
+const stream = coll.watch();
+const adoption = new adoption_1.Adoption(host, db, coll);
+const success = new success_1.Success(host, db, coll);
+const failure = new failure_1.Failure(host, db, coll);
+const executor = new executor_1.Executor(stream, adoption, success, failure, 'capture', execute_1.execute);
+//# sourceMappingURL=script.js.map

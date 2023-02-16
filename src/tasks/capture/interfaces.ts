@@ -1,19 +1,23 @@
-// import * as JsonRpc from '../../json-rpc';
-import GenericDocument from '../../document';
+import * as AsyncRpc from "../../async-rpc/interfaces";
 
+export type Method = 'capture';
 
-export namespace Req {
-	export interface Params {
-		readonly db: string;
-		readonly bucket: string;
-		readonly object: string;
-	}
-}
-export type Req = GenericDocument.Req<'capture', Req.Params>;
-
-export namespace Res {
-	export type Succ = GenericDocument.Res.Succ<null>;
-	export type Fail = GenericDocument.Res.Fail<string>;
+export interface Params {
+	readonly db: string;
+	readonly bucket: string;
+	readonly object: string;
 }
 
-export type Document = GenericDocument<Req, Res.Succ, Res.Fail>;
+export type Result = null;
+
+export type ErrDesc = string;
+
+export namespace Document {
+	export type Orphan = AsyncRpc.Document.Orphan<Method, Params>;
+	export type Adopted = AsyncRpc.Document.Adopted<Method, Params>;
+	export type Cancelled = AsyncRpc.Document.Cancelled<Method, Params>;
+	export type Succeeded = AsyncRpc.Document.Succeeded<Method, Params, Result>;
+	export type Failed = AsyncRpc.Document.Failed<Method, Params, ErrDesc>;
+}
+
+export type Document = AsyncRpc.Document<Method, Params, Result, ErrDesc>;

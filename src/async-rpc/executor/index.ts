@@ -24,43 +24,29 @@ export class Executor<
 		execute: Execute<params, result>,
 	) {
 		stream.on('change', async notif => {
-			if (
-				notif.operationType === 'insert' &&
-				notif.fullDocument.detail.request.method === method
-			) {
-				const doc = await adoption.adopt<method, params>(method);
+			if (notif.operationType !== 'insert') return;
+			if (notif.fullDocument.request.method !== method) return;
 
-				let result: result;
-				try {
-					result = await execute(doc.detail.request.params);
-				} catch (err) {
-					failure.fail(doc, <errDesc>err);
-					return;
-				}
-				success.succeed(doc, result);
-			}
+			const doc = await adoption.adopt<method, params>(method);
+			await execute(doc.request.params).then(
+				result => void success.succeed(doc, result),
+				(err: errDesc) => void failure.fail(doc, err),
+			);
 		});
 
 		(async () => {
 			try {
 				for (; ;) {
 					const doc = await adoption.adopt<method, params>(method);
-					(async () => {
-						let result: result;
-						try {
-							result = await execute(doc.detail.request.params);
-						} catch (err) {
-							failure.fail(doc, <errDesc>err);
-							return;
-						}
-						success.succeed(doc, result);
-					})();
+					execute(doc.request.params).then(
+						result => void success.succeed(doc, result),
+						(err: errDesc) => void failure.fail(doc, err),
+					);
 				}
 			} catch (err) {
-				if (err instanceof Adoption.OrphanNotFound) return;
-				console.error(err);
+				if (err instanceof Adoption.OrphanNotFound) { }
+				else throw err;
 			}
 		})();
-
 	}
 }

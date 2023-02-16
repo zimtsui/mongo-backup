@@ -31,30 +31,25 @@ export namespace Document {
 	> {
 		readonly _id: ObjectId;
 		readonly state: State;
-		readonly detail: Base.Detail<method, params>;
 	}
 	namespace Base {
-		export interface Detail<
-			method extends string,
-			params,
-		> {
-			readonly request: Req<method, params>;
-			readonly lock: string;
-		}
+		export interface Detail { }
 	}
 
 	export interface Orphan<
 		method extends string = string,
 		params = unknown,
-	> extends Base<method, params> {
+	> extends Base<method, params>, Orphan.Detail<method, params> {
+		readonly _id: ObjectId;
 		readonly state: State.ORPHAN;
-		readonly detail: Orphan.Detail<method, params>;
 	}
 	export namespace Orphan {
 		export interface Detail<
 			method extends string,
 			params,
-		> extends Base.Detail<method, params> {
+		> extends Base.Detail {
+			readonly request: Req<method, params>;
+			readonly lock: string;
 			readonly submitTime: number;
 		}
 	}
@@ -62,9 +57,8 @@ export namespace Document {
 	export interface Adopted<
 		method extends string = string,
 		params = unknown,
-	> extends Base<method, params> {
+	> extends Base<method, params>, Adopted.Detail<method, params> {
 		readonly state: State.ADOPTED;
-		readonly detail: Adopted.Detail<method, params>;
 	}
 	export namespace Adopted {
 		export interface Detail<
@@ -78,9 +72,8 @@ export namespace Document {
 	export interface Cancelled<
 		method extends string = string,
 		params = unknown,
-	> extends Base<method, params> {
+	> extends Base<method, params>, Cancelled.Detail<method, params> {
 		readonly state: State.CANCELLED;
-		readonly detail: Cancelled.Detail<method, params>;
 	}
 	export namespace Cancelled {
 		export interface Detail<
@@ -95,9 +88,8 @@ export namespace Document {
 		method extends string = string,
 		params = unknown,
 		result = unknown,
-	> extends Base<method, params> {
+	> extends Base<method, params>, Succeeded.Detail<method, params, result> {
 		readonly state: State.SUCCEEDED;
-		readonly detail: Succeeded.Detail<method, params, result>;
 	}
 	export namespace Succeeded {
 		export interface Detail<
@@ -114,9 +106,8 @@ export namespace Document {
 		method extends string = string,
 		params = unknown,
 		errDesc = unknown,
-	> extends Base<method, params> {
+	> extends Base<method, params>, Failed.Detail<method, params, errDesc> {
 		readonly state: State.FAILED;
-		readonly detail: Failed.Detail<method, params, errDesc>;
 	}
 	export namespace Failed {
 		export interface Detail<
