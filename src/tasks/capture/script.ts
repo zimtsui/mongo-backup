@@ -7,6 +7,7 @@ import { Success } from "../../async-rpc/executor/success";
 import { Failure } from "../../async-rpc/executor/failure";
 import { execute } from "./execute";
 import { Method, Params, Result, ErrDesc } from "./interfaces";
+import { adapt } from "startable-adaptor";
 
 
 assert(process.env.TASKLIST_HOST_URI);
@@ -32,3 +33,5 @@ const executor = new Executor<Method, Params, Result, ErrDesc>(
 	'capture',
 	execute,
 );
+
+adapt(executor.$s);

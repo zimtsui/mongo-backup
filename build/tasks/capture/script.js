@@ -7,6 +7,7 @@ const adoption_1 = require("../../async-rpc/executor/adoption");
 const success_1 = require("../../async-rpc/executor/success");
 const failure_1 = require("../../async-rpc/executor/failure");
 const execute_1 = require("./execute");
+const startable_adaptor_1 = require("startable-adaptor");
 assert(process.env.TASKLIST_HOST_URI);
 assert(process.env.TASKLIST_DB);
 assert(process.env.TASKLIST_COLL);
@@ -18,4 +19,5 @@ const adoption = new adoption_1.Adoption(host, db, coll);
 const success = new success_1.Success(host, db, coll);
 const failure = new failure_1.Failure(host, db, coll);
 const executor = new executor_1.Executor(stream, adoption, success, failure, 'capture', execute_1.execute);
+(0, startable_adaptor_1.adapt)(executor.$s);
 //# sourceMappingURL=script.js.map

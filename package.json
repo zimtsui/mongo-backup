@@ -6,9 +6,9 @@
     "clean": "rm -rf ./build",
     "rebuild": "npm run clean && npm run build",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "set -a; . ./env.sh && node --enable-source-maps ./build/app",
-    "capture": "node ./build/tasks/capture/consumer",
-    "restore": "node ./build/tasks/restore/consumer"
+    "start": "set -a; . ./env.sh && node --enable-source-maps ./build/gateway",
+    "capture": "node ./build/tasks/capture/script",
+    "restore": "node ./build/tasks/restore/script"
   },
   "engines": {
     "node": ">=16"
@@ -25,6 +25,10 @@
     "koa": "^2.14.1",
     "koa-body": "^6.0.1",
     "mongodb": "^5.0.1",
+    "node-time-engine": "github:zimtsui/node-time-engine",
+    "pollerloop": "github:zimtsui/pollerloop",
+    "startable": "github:zimtsui/startable",
+    "startable-adaptor": "github:zimtsui/startable-adaptor",
     "ws": "^8.12.0"
   }
 }
