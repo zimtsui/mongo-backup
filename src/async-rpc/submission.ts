@@ -17,12 +17,13 @@ export class Submission {
 	>(
 		method: method,
 		params: params,
-		lock: string,
+		lock?: string,
 	): Promise<Document.Orphan<method, params>> {
 		type orphan = Document.Orphan<method, params>;
 
 		const _id = new ObjectId();
 		const id = _id.toHexString();
+		if (!lock) lock = id;
 
 		let newDoc: orphan;
 		let oldDoc: Document.Orphan | Document.Adopted | null;

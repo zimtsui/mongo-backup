@@ -12,6 +12,8 @@ class Submission {
     async submit(method, params, lock) {
         const _id = new mongodb_1.ObjectId();
         const id = _id.toHexString();
+        if (!lock)
+            lock = id;
         let newDoc;
         let oldDoc;
         const session = this.host.startSession();

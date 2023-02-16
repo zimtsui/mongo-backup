@@ -5,7 +5,7 @@ export declare class Submission {
     private db;
     private coll;
     constructor(host: MongoClient, db: Db, coll: Collection<Document>);
-    submit<method extends string, params>(method: method, params: params, lock: string): Promise<Document.Orphan<method, params>>;
+    submit<method extends string, params>(method: method, params: params, lock?: string): Promise<Document.Orphan<method, params>>;
 }
 export declare namespace Submission {
     class Locked extends Error {
