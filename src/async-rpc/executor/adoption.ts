@@ -12,7 +12,7 @@ export class Adoption {
 
 	public async adopt<
 		method extends string,
-		params,
+		params extends readonly unknown[],
 	>(method: method): Promise<Document.Adopted<method, params>> {
 		type adopted = Document.Adopted<method, params>;
 		let newDoc: Document.Adopted<method, params> | null;

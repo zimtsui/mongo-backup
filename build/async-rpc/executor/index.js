@@ -20,13 +20,13 @@ class Executor {
             if (notif.fullDocument.request.method !== this.method)
                 return;
             const doc = await this.adoption.adopt(this.method);
-            await this.execute(doc.request.params).then(result => void this.success.succeed(doc, result), (err) => void this.failure.fail(doc, err));
+            await this.execute(...doc.request.params).then(result => void this.success.succeed(doc, result), (err) => void this.failure.fail(doc, err));
         };
         this.loop = async (sleep) => {
             try {
                 for (;; await sleep(0)) {
                     const doc = await this.adoption.adopt(this.method);
-                    this.execute(doc.request.params).then(result => void this.success.succeed(doc, result), (err) => void this.failure.fail(doc, err));
+                    this.execute(...doc.request.params).then(result => void this.success.succeed(doc, result), (err) => void this.failure.fail(doc, err));
                 }
             }
             catch (err) {

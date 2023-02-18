@@ -4,10 +4,10 @@ import { Adoption } from "./adoption";
 import { Failure } from "./failure";
 import { Success } from "./success";
 import { Startable } from "startable";
-interface Execute<params, result> {
-    (params: params): Promise<result>;
+interface Execute<params extends readonly unknown[], result> {
+    (...params: params): Promise<result>;
 }
-export declare class Executor<method extends string, params, result, errDesc> {
+export declare class Executor<method extends string, params extends readonly unknown[], result, errDesc> {
     private stream;
     private adoption;
     private success;

@@ -4,7 +4,7 @@ import * as JsonRpc from '../json-rpc';
 
 export type Req<
 	method extends string = string,
-	params = unknown,
+	params extends readonly unknown[] = readonly unknown[],
 > = JsonRpc.Req<string, method, params>;
 export namespace Res {
 	export type Succ<
@@ -27,7 +27,7 @@ export namespace Document {
 
 	interface Base<
 		method extends string = string,
-		params = unknown,
+		params extends readonly unknown[] = readonly unknown[],
 	> {
 		readonly _id: ObjectId;
 		readonly state: State;
@@ -38,7 +38,7 @@ export namespace Document {
 
 	export interface Orphan<
 		method extends string = string,
-		params = unknown,
+		params extends readonly unknown[] = readonly unknown[],
 	> extends Base<method, params>, Orphan.Detail<method, params> {
 		readonly _id: ObjectId;
 		readonly state: State.ORPHAN;
@@ -46,7 +46,7 @@ export namespace Document {
 	export namespace Orphan {
 		export interface Detail<
 			method extends string,
-			params,
+			params extends readonly unknown[],
 		> extends Base.Detail {
 			readonly request: Req<method, params>;
 			readonly lock: string;
@@ -56,14 +56,14 @@ export namespace Document {
 
 	export interface Adopted<
 		method extends string = string,
-		params = unknown,
+		params extends readonly unknown[] = readonly unknown[],
 	> extends Base<method, params>, Adopted.Detail<method, params> {
 		readonly state: State.ADOPTED;
 	}
 	export namespace Adopted {
 		export interface Detail<
 			method extends string,
-			params,
+			params extends readonly unknown[],
 		> extends Orphan.Detail<method, params> {
 			readonly adoptTime: number;
 		}
@@ -71,14 +71,14 @@ export namespace Document {
 
 	export interface Cancelled<
 		method extends string = string,
-		params = unknown,
+		params extends readonly unknown[] = readonly unknown[],
 	> extends Base<method, params>, Cancelled.Detail<method, params> {
 		readonly state: State.CANCELLED;
 	}
 	export namespace Cancelled {
 		export interface Detail<
 			method extends string,
-			params,
+			params extends readonly unknown[],
 		> extends Adopted.Detail<method, params> {
 			readonly cancelTime: number;
 		}
@@ -86,7 +86,7 @@ export namespace Document {
 
 	export interface Succeeded<
 		method extends string = string,
-		params = unknown,
+		params extends readonly unknown[] = readonly unknown[],
 		result = unknown,
 	> extends Base<method, params>, Succeeded.Detail<method, params, result> {
 		readonly state: State.SUCCEEDED;
@@ -94,7 +94,7 @@ export namespace Document {
 	export namespace Succeeded {
 		export interface Detail<
 			method extends string,
-			params,
+			params extends readonly unknown[],
 			result,
 		> extends Adopted.Detail<method, params> {
 			readonly response: Res.Succ<result>;
@@ -104,7 +104,7 @@ export namespace Document {
 
 	export interface Failed<
 		method extends string = string,
-		params = unknown,
+		params extends readonly unknown[] = readonly unknown[],
 		errDesc = unknown,
 	> extends Base<method, params>, Failed.Detail<method, params, errDesc> {
 		readonly state: State.FAILED;
@@ -112,7 +112,7 @@ export namespace Document {
 	export namespace Failed {
 		export interface Detail<
 			method extends string,
-			params,
+			params extends readonly unknown[],
 			errDesc,
 		> extends Adopted.Detail<method, params> {
 			readonly response: Res.Fail<errDesc>;
@@ -123,7 +123,7 @@ export namespace Document {
 
 export type Document<
 	method extends string = string,
-	params = unknown,
+	params extends readonly unknown[] = readonly unknown[],
 	result = unknown,
 	errDesc = unknown,
 > =

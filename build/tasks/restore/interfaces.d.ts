@@ -1,9 +1,10 @@
 import * as AsyncRpc from "../../async-rpc/interfaces";
 export type Method = 'restore';
-export interface Params {
-    readonly bucket: string;
-    readonly object: string;
-    readonly db: string;
+export type Params = [Params.Bucket, Params.Object, Params.Db];
+export declare namespace Params {
+    type Db = string;
+    type Bucket = string;
+    type Object = string;
 }
 export type Result = null;
 export type ErrDesc = string;

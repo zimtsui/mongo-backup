@@ -49,11 +49,7 @@ router.post('/capture', async (ctx, next) => {
     assert(typeof ctx.query.lock === 'string' ||
         typeof ctx.query.lock === 'undefined');
     try {
-        const doc = await submission.submit('capture', {
-            db: ctx.query.db,
-            bucket: ctx.query.bucket,
-            object: ctx.query.object,
-        }, ctx.query.lock);
+        const doc = await submission.submit('capture', [ctx.query.db, ctx.query.bucket, ctx.query.object], ctx.query.lock);
         ctx.status = 201;
         ctx.body = doc;
     }

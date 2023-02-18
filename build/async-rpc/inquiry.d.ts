@@ -9,7 +9,7 @@ export declare class Inquiry {
     private broadcast;
     constructor(host: MongoClient, db: Db, coll: Collection<Document>, stream: ChangeStream<Document, ChangeStreamDocument<Document>>);
     private find;
-    inquire<method extends string, params, result, errDesc>(id: string): StateStream<Document<method, params, result, errDesc>>;
+    inquire<method extends string, params extends readonly unknown[], result, errDesc>(id: string): StateStream<Document<method, params, result, errDesc>>;
 }
 export declare namespace Inquiry {
     class NotFound extends Error {

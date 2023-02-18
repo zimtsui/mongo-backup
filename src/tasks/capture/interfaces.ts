@@ -2,10 +2,11 @@ import * as AsyncRpc from "../../async-rpc/interfaces";
 
 export type Method = 'capture';
 
-export interface Params {
-	readonly db: string;
-	readonly bucket: string;
-	readonly object: string;
+export type Params = [Params.Db, Params.Bucket, Params.Object];
+export namespace Params {
+	export type Db = string;
+	export type Bucket = string;
+	export type Object = string;
 }
 
 export type Result = null;

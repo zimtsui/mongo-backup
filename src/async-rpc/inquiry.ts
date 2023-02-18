@@ -33,7 +33,7 @@ export class Inquiry {
 
 	private async find<
 		method extends string,
-		params,
+		params extends readonly unknown[],
 		result,
 		errDesc,
 	>(
@@ -48,7 +48,7 @@ export class Inquiry {
 
 	public inquire<
 		method extends string,
-		params,
+		params extends readonly unknown[],
 		result,
 		errDesc,
 	>(

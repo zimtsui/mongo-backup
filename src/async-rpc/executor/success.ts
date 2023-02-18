@@ -12,7 +12,7 @@ export class Success {
 
 	public async succeed<
 		method extends string,
-		params,
+		params extends readonly unknown[],
 		result,
 	>(
 		doc: Document.Adopted<method, params>,

@@ -12,7 +12,7 @@ export class Failure {
 
 	public async fail<
 		method extends string,
-		params,
+		params extends readonly unknown[],
 		errDesc,
 	>(
 		doc: Document.Adopted<method, params>,

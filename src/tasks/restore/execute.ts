@@ -9,15 +9,17 @@ assert(process.env.BACKUP_MONGO_HOST_URI);
 assert(process.env.BACKUP_S3_HOST_ALIAS);
 
 export async function execute(
-	params: Params,
+	db: Params.Db,
+	bucket: Params.Bucket,
+	object: Params.Object,
 ): Promise<Result> {
 	return await promisify(execFile)(
 		resolve(__dirname, '../../../mongo-backup'),
 		[
 			'restore',
-			params.db,
-			params.bucket,
-			params.object,
+			bucket,
+			object,
+			db,
 		],
 	).then(
 		() => null,

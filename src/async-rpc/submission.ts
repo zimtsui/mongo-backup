@@ -13,7 +13,7 @@ export class Submission {
 
 	public async submit<
 		method extends string,
-		params,
+		params extends readonly unknown[],
 	>(
 		method: method,
 		params: params,

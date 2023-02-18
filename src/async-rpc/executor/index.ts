@@ -1,4 +1,3 @@
-import EventEmitter = require("events");
 import { ChangeStream, ChangeStreamDocument } from "mongodb";
 import { Document, Req, Res } from "../interfaces";
 import { Adoption } from "./adoption";
@@ -9,13 +8,16 @@ import { Loop, Pollerloop } from "pollerloop";
 import { nodeTimeEngine } from "node-time-engine";
 
 
-interface Execute<params, result> {
-	(params: params): Promise<result>;
+interface Execute<
+	params extends readonly unknown[],
+	result,
+> {
+	(...params: params): Promise<result>;
 }
 
 export class Executor<
 	method extends string,
-	params,
+	params extends readonly unknown[],
 	result,
 	errDesc,
 >  {
@@ -42,7 +44,7 @@ export class Executor<
 		if (notif.fullDocument.request.method !== this.method) return;
 
 		const doc = await this.adoption.adopt<method, params>(this.method);
-		await this.execute(doc.request.params).then(
+		await this.execute(...doc.request.params).then(
 			result => void this.success.succeed(doc, result),
 			(err: errDesc) => void this.failure.fail(doc, err),
 		);
@@ -52,7 +54,7 @@ export class Executor<
 		try {
 			for (; ; await sleep(0)) {
 				const doc = await this.adoption.adopt<method, params>(this.method);
-				this.execute(doc.request.params).then(
+				this.execute(...doc.request.params).then(
 					result => void this.success.succeed(doc, result),
 					(err: errDesc) => void this.failure.fail(doc, err),
 				);

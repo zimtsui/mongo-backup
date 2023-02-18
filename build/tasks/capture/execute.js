@@ -7,12 +7,12 @@ const path_1 = require("path");
 const assert = require("assert");
 assert(process.env.BACKUP_MONGO_HOST_URI);
 assert(process.env.BACKUP_S3_HOST_ALIAS);
-async function execute(params) {
+async function execute(db, bucket, object) {
     return await (0, util_1.promisify)(child_process_1.execFile)((0, path_1.resolve)(__dirname, '../../../mongo-backup'), [
         'capture',
-        params.bucket,
-        params.object,
-        params.db,
+        db,
+        bucket,
+        object,
     ]).then(() => null, err => Promise.reject(new Error(err.stderr)));
 }
 exports.execute = execute;

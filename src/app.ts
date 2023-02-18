@@ -64,11 +64,7 @@ router.post('/capture', async (ctx, next) => {
 	try {
 		const doc = await submission.submit<Capture.Method, Capture.Params>(
 			'capture',
-			{
-				db: ctx.query.db,
-				bucket: ctx.query.bucket,
-				object: ctx.query.object,
-			},
+			[ctx.query.db, ctx.query.bucket, ctx.query.object],
 			ctx.query.lock,
 		);
 		ctx.status = 201;
