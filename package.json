@@ -24,7 +24,7 @@
     "@zimtsui/koa-ws-filter": "^0.0.5",
     "koa": "^2.14.1",
     "koa-body": "^6.0.1",
-    "mongodb": "^5.0.1",
+    "mongodb": "^5.8.0",
     "node-time-engine": "github:zimtsui/node-time-engine",
     "pollerloop": "github:zimtsui/pollerloop",
     "startable": "github:zimtsui/startable",
